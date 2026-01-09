@@ -47,6 +47,17 @@ RAVEN acts as a **Programmable Proxy** sitting between your application and the 
 
 ---
 
+## 📂 Data Vault (IndexedDB)
+
+RAVEN organizes your virtual environment through a structured hierarchy:
+
+* 📁 **Sessions**: High-level scenarios (e.g., "Full Purchase Flow").
+* 📍 **Routes**: Normalized URL patterns grouped within a session.
+* ⚡ **Requests**: The actual archived payloads (method, status, response body).
+
+---
+
+
 ## ⌨️ Quick Start
 
 ### 1. Installation
