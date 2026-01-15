@@ -152,12 +152,12 @@ import * as utils from "./settings.js";
             openDB().then(db => {
                 const stores = useStores(db, [SCHEMAS.SESSION.store, SCHEMAS.ROUTES.store, SCHEMAS.REQUESTS.store], 'readwrite')
                 stores[SCHEMAS.SESSION.store].add({ title: metaData.title, description: metaData.description }).onsuccess = e1 => {
-                    for (const route of Object.keys(metaData.json)) {
-                        const requests = metaData.json[route];
+                    for (const route of Object.keys(metaData.navigations)) {
+                        const requests = metaData.navigations[route];
                         stores[SCHEMAS.ROUTES.store].add({ route, "sessionId": e1.target.result }).onsuccess = e2 => {
                             // Loop through requests in the route
                             for (const request of Object.keys(requests)) {
-                                stores[SCHEMAS.REQUESTS.store].add({ routeId: e2.target.result, url: request, response: requests[request] })
+                                stores[SCHEMAS.REQUESTS.store].add({ routeId: e2.target.result, url: request, xhr: requests[request] })
                             }
                             utils.debugRaven("saved...", metaData)
                             //tx.commit();

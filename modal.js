@@ -49,8 +49,10 @@
       }
     };
     box.querySelector('#save').onclick = () => {
-      const title = box.querySelector('#title').value.trim();
-      const description = box.querySelector('#desc').value.trim();
+      const titleBox = box.querySelector('#title').value,
+      descriptionBox = box.querySelector('#desc').value,
+      title = titleBox!=""?titleBox.trim():"default save title",
+      description = descriptionBox!=""?descriptionBox.trim():"default save description";
       onSubmit({ title, description });
       closeModal();
     };

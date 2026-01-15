@@ -11,7 +11,7 @@ function setupRAVEN() {
         isRecordMode: rMode == rModes.MANUAL && ravenState == rStates.RECORD,
         state: ravenState,
         isEnabled: rMode != rModes.DISABLED,
-        loadedExample: loadedExample,
+        loadedExample: isNaN(loadedExample) ? -1 : loadedExample,
         debugMode: true
     }
     console.log("RAVEN : ", window.RAVEN)

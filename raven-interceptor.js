@@ -54,8 +54,9 @@
     // ==================================================
     const OriginalXHR = window.XMLHttpRequest;
     if (window.RAVEN.isRecordMode) {
+        recordCache["navigations"] = {}
         applyXHR(saveXHR, "🔴 new RECORD XHR")
-    } else if (window.RAVEN.isReplayMode && window.RAVEN.loadedExample) {
+    } else if (window.RAVEN.isReplayMode) {
         setupXHRData();
     }
     async function setupXHRData() {
@@ -90,8 +91,8 @@
             window.QUERIES.getByIndex("route", "by_session_url", window.RAVEN.loadedExample, xhr.__pageUrl)
                 .then(route => {
                     if (!route || route.length === 0) {
-                        console.log("route not found")
-                        return originalSend.apply(xhr, arguments);
+                        console.warn("route not found")
+                        // return originalSend.apply(xhr, arguments);
                         fakeEmptyResponse(xhr)
                         return;
                     }
@@ -100,17 +101,18 @@
                     window.QUERIES.getByIndex("request", "by_route", route.id, encodeURIComponent(xhr.__url))
                         .then(request => {
                             if (!request || request.length === 0) {
-                                console.log("🔴 could not find request for url : ", xhr.__url)
-                                return originalSend.apply(xhr, arguments);
+                                console.warn("🔴 could not find request for url : ", xhr.__url, "page url : ", xhr.__pageUrl, " route id : ", route.id)
+                                // return originalSend.apply(xhr, arguments);
                                 fakeEmptyResponse(xhr)
                                 return;
                             }
                             console.log("xhr request : ", request)
                             console.log("🟢 XHR CACHE HIT →", xhr.__url);
-                            const fakeResponse = JSON.stringify(request[0].response);
+                            const fakeXHR = request[0].xhr,
+                                fakeResponse = JSON.stringify(fakeXHR.response)
                             Object.defineProperties(xhr, {
-                                readyState: { get: () => 4 },
-                                status: { get: () => 200 },
+                                readyState: { get: () => fakeXHR.readyState },
+                                status: { get: () => fakeXHR.status },
                                 responseText: { get: () => fakeResponse },
                                 response: { get: () => fakeResponse }
                             });
@@ -119,12 +121,15 @@
                         })
                 });
         };
+        console.log("xhr : ", xhr)
         return xhr;
     }
     function fireXHR(xhr) {
-        xhr.dispatchEvent(new Event('readystatechange'));
-        xhr.dispatchEvent(new Event('load'));
-        xhr.dispatchEvent(new Event('loadend'));
+        setTimeout(() => {
+            xhr.dispatchEvent(new Event('readystatechange'));
+            xhr.dispatchEvent(new Event('load'));
+            xhr.dispatchEvent(new Event('loadend'));
+        }, 0);
     }
     function fakeEmptyResponse(xhr, status = 404) {
         const emptyResponse = JSON.stringify({});
@@ -141,27 +146,30 @@
     }
 
     // SAVE INTERCEPTOR
-    
+
     function saveXHR(xhr) {
         xhr.addEventListener('load', () => {
             try {
                 if (xhr.__method !== 'GET') return;
                 const key = encodeURIComponent(xhr.__url);
-                if (cache[key] != undefined) return;
-                recordCache[window.location.href] ??= {}
-                recordCache[window.location.href][key] = JSON.parse(xhr.responseText)
-                cache[key] = JSON.parse(xhr.responseText);
+                recordCache["navigations"][xhr.__pageUrl] ??= {}
+                if (recordCache["navigations"][xhr.__pageUrl][key] != undefined) return;
+                console.log("inserting xhr : ", xhr)
+                recordCache["navigations"][xhr.__pageUrl][key] = {}
+                recordCache["navigations"][xhr.__pageUrl][key]["response"] = JSON.parse(xhr.responseText);
+                recordCache["navigations"][xhr.__pageUrl][key]["status"] = xhr.status;
+                recordCache["navigations"][xhr.__pageUrl][key]["readyState"] = xhr.readyState;
+                console.log("recordCache : ", recordCache)
             } catch { }
         });
         return xhr;
     }
     addEventListener("snapshot", (e) => {
-        cache["url"] = currentUrl
+        recordCache["title"] = e.detail.title;
+        recordCache["description"] = e.detail.description;
         console.log("SNAPSHOT! -> details : ", e.detail)
-        downloadJson(cache)
-        downloadJson(recordCache, "fullcache.json")
-        const metaData = { "json": recordCache, "title": e.detail.title ?? "case title", "description": e.detail.description ?? "case description" };
-        window.dispatchEvent(new CustomEvent('saveExample', { detail: metaData }));
+        downloadJson(recordCache, recordCache["title"] + ".json")
+        window.QUERIES.saveExample(recordCache)
     });
     function downloadJson(json, filename = 'cache.json') {
         const blob = new Blob(
