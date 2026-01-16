@@ -221,7 +221,6 @@ async function createSession(session) {
         setTimeout(() => {
           window.location.href = sessionRoute[0].route;
         }, 200);
-        console.log("selected session : ", sessionRoute[0])
       }
     })
   });
@@ -249,7 +248,6 @@ async function saveExample(example, exampleContent) {
 
 // ASSEMBLE RAVEN
 function assembleDOM() {
-  console.log("assembling DOM")
   panel.appendChild(button);
   panel.appendChild(examplesContainer);
   panel.appendChild(recordedUrlsContainer);
@@ -280,8 +278,6 @@ function startRecording() {
   recordIcon.classList.add('raven-record-icon--recording');
   button.classList.add('raven-record-button--recording');
   recordedUrlsContainer.classList.add('raven-recorded-urls--visible');
-
-  console.log('Recording started');
 }
 
 function stopRecording() {
@@ -290,17 +286,13 @@ function stopRecording() {
   urlsList.innerHTML = '';
   setPageCount(0);
   stopNavigationDetection();
-  console.log('Recording stopped');
 }
 
 function detectNavigation() {
-  console.log("start navigation detection")
   let last = location.href;
   navigationInterval = setInterval(async () => {
     if (location.href !== last) {
       last = location.href;
-      console.log("Navigation detected:", last);
-      console.log("RAVEN RECORD MODE")
       addRecordedUrl(location.hash, document.title)
     }
   }, 100);
@@ -308,7 +300,6 @@ function detectNavigation() {
 
 function stopNavigationDetection() {
   clearInterval(navigationInterval);
-  console.log("Navigation detection stopped");
 }
 
 if (window.RAVEN.isEnabled) {

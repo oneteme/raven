@@ -170,61 +170,14 @@ import * as utils from "./settings.js";
                             for (const request of Object.keys(requests)) {
                                 stores[SCHEMAS.REQUESTS.store].add({ routeId: e2.target.result, url: request, xhr: requests[request] })
                             }
-                            //utils.debugRaven("saved...", metaData)
+                            utils.debugRaven("saved...", metaData)
                             //tx.commit();
                         }
                     }
                 };
             })
-        },
-
-        async join(leftStore, rightStore, leftKey, rightKey) {
-            const leftData = await QUERIES.list(leftStore);
-            const rightData = await QUERIES.list(rightStore);
-
-            const joined = [];
-
-            leftData.forEach(leftRow => {
-                const matches = rightData.filter(rightRow => rightRow[rightKey] === leftRow[leftKey]);
-                matches.forEach(rightRow => {
-                    joined.push({ ...leftRow, ...rightRow });
-                });
-            });
-
-            return joined;
-        },
-        async selectWhere(storeName, filters = {}) {
-            const all = await QUERIES.list(storeName);
-
-            // Filter by all keys in filters object
-            return all.filter(item => {
-                return Object.keys(filters).every(key => item[key] === filters[key]);
-            });
-        },
-        async selectRequests(exampleId) {
-            console.log("example : ", exampleId)
-            const routes = await QUERIES.selectWhere(SCHEMAS.ROUTES, { 'exampleId': exampleId, 'route': "http%3A%2F%2Flocalhost%3A9001%2Fjquery%2Finstance%…nvironement.notNull%3D%26order%3Denvironement.asc" });
-            console.log("routes : ", routes)
-            const requests = await QUERIES.selectWhere(SCHEMAS.REQUESTS, { 'routeId': routes.id, 'route': window.location.href });
-            console.log("requests : ", requests)
-            // const result = [];
-            // routes.forEach(route => {
-            //     requests
-            //         .filter(r => r.routeId === route.id)
-            //         .forEach(r => result.push({ route, request: r }));
-            // });
-
-            // return result;
         }
 
     };
-
-    // -----------------------------
-    // Custom event listener
-    // -----------------------------
-    // window.addEventListener('saveExample', async (e) => {
-    //     await QUERIES.saveExample(e.detail)
-    // });
-    // new CustomEvent('selectExample', { detail: QUERIES.getById(STORES.METADATA,) })
     console.log('📦 IndexedDB ready');
 })();

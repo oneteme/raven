@@ -1,14 +1,5 @@
 (function () {
-    let cache = {};
     let recordCache = {};
-
-    // --------------------------------------------------
-    // Receive cache dynamically
-    // --------------------------------------------------
-    window.addEventListener('chooseExample', (e) => {
-        console.log('📦 Cache received');
-        cache = e.detail || null;
-    });
 
     // ==================================================
     // FETCH INTERCEPTOR
@@ -63,7 +54,6 @@
     }
     function applyXHR(fn, msg = "New XHR") {
         window.XMLHttpRequest = function () {
-            console.log(msg)
             const xhr = new OriginalXHR();
             openXHR(xhr)
             return fn(xhr);
@@ -96,7 +86,6 @@
                         return;
                     }
                     route = route[0]
-                    console.log("xhr route : ", route)
                     window.QUERIES.getByIndex("request", "by_route", route.id, encodeURIComponent(xhr.__url))
                         .then(request => {
                             if (!request || request.length === 0) {
@@ -105,8 +94,6 @@
                                 fakeEmptyResponse(xhr)
                                 return;
                             }
-                            console.log("xhr request : ", request)
-                            console.log("🟢 XHR CACHE HIT →", xhr.__url);
                             const fakeXHR = request[0].xhr,
                                 fakeResponse = JSON.stringify(fakeXHR.response)
                             Object.defineProperties(xhr, {
@@ -120,7 +107,6 @@
                         })
                 });
         };
-        console.log("xhr : ", xhr)
         return xhr;
     }
     function fireXHR(xhr) {
@@ -153,12 +139,10 @@
                 const key = encodeURIComponent(xhr.__url);
                 recordCache["navigations"][xhr.__pageUrl] ??= {}
                 if (recordCache["navigations"][xhr.__pageUrl][key] != undefined) return;
-                console.log("inserting xhr : ", xhr)
                 recordCache["navigations"][xhr.__pageUrl][key] = {}
                 recordCache["navigations"][xhr.__pageUrl][key]["response"] = JSON.parse(xhr.responseText);
                 recordCache["navigations"][xhr.__pageUrl][key]["status"] = xhr.status;
                 recordCache["navigations"][xhr.__pageUrl][key]["readyState"] = xhr.readyState;
-                console.log("recordCache : ", recordCache)
             } catch { }
         });
         return xhr;
@@ -166,7 +150,6 @@
     addEventListener("snapshot", (e) => {
         recordCache["title"] = e.detail.title;
         recordCache["description"] = e.detail.description;
-        console.log("SNAPSHOT! -> details : ", e.detail)
         downloadJson(recordCache, recordCache["title"] + ".json")
         window.QUERIES.saveExample(recordCache)
     });
