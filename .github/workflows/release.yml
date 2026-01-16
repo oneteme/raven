@@ -26,9 +26,8 @@ jobs:
         registry-url: 'https://registry.npmjs.org'
         scope: '@oneteme'
     - uses: oneteme/automation-scripts/.github/actions/npm-build-project@main
-    - uses: oneteme/automation-scripts/.github/actions/npm-deploy-project@main
-      with:
-        project: ''
+    - name: Publish NPM Package
+      run: npm publish "./dist" --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     - uses: oneteme/automation-scripts/.github/actions/npm-project-version@main
