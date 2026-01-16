@@ -2,6 +2,7 @@
   "name": "raven",
   "version": "1.0.0-beta",
   "description": "Request Archive for Virtual Endpoint Navigation",
+  "private": false,
   "keywords": [
     "rav"
   ],
