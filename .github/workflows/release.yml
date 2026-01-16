@@ -1,10 +1,6 @@
 name: tag release
-on:
-  workflow_dispatch:
-    inputs:
-      ng-collector:
-        type: boolean
-        description: publish ng-collector library
+on: workflow_dispatch
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,7 +10,7 @@ jobs:
         fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
     - uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 20
     - uses: oneteme/automation-scripts/.github/actions/npm-build-project@main
     - uses: oneteme/automation-scripts/.github/actions/npm-scan-project@main #see package.json: scripts.build
       env:
@@ -26,14 +22,13 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 20
         registry-url: 'https://registry.npmjs.org'
         scope: '@oneteme'
     - uses: oneteme/automation-scripts/.github/actions/npm-build-project@main
     - uses: oneteme/automation-scripts/.github/actions/npm-deploy-project@main
-      if: ${{ inputs.ng-collector }}
       with:
-        project: 'inspect-ng-collector'
+        project: 'raven'
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     - uses: oneteme/automation-scripts/.github/actions/npm-project-version@main
