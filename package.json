@@ -1,0 +1,32 @@
+{
+  "name": "raven",
+  "version": "1.0.0-beta",
+  "description": "Request Archive for Virtual Endpoint Navigation",
+  "keywords": [
+    "rav"
+  ],
+  "homepage": "https://github.com/oneteme/raven#readme",
+  "bugs": {
+    "url": "https://github.com/oneteme/raven/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oneteme/raven.git"
+  },
+  "license": "ISC",
+  "author": "JARVIS",
+  "type": "commonjs",
+  "main": "dist/raven.min.js",
+  "unpkg": "dist/raven.min.js",
+  "jsdelivr": "dist/raven.min.js",
+  "style": "dist/raven.min.css",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "vite": "^7.3.1"
+  }
+}
