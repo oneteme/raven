@@ -1,21 +1,24 @@
 {
-  "name": "raven",
+  "name": "@oneteme/raven",
   "version": "1.0.0-beta",
   "description": "Request Archive for Virtual Endpoint Navigation",
   "private": false,
-  "keywords": [
-    "rav"
-  ],
   "homepage": "https://github.com/oneteme/raven#readme",
-  "bugs": {
-    "url": "https://github.com/oneteme/raven/issues"
+  "bugs": "https://github.com/oneteme/raven/issues",
+  "author": {
+    "name": "u$f",
+    "url": "https://oneteme.github.io/"
   },
+  "contributors": [
+    {
+      "name": "mohamedamine-tarhouni"
+    }
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oneteme/raven.git"
+    "url": "https://github.com/oneteme/raven.git"
   },
   "license": "ISC",
-  "author": "JARVIS",
   "type": "commonjs",
   "main": "src/raven.js",
   "unpkg": "dist/raven.min.js",
