@@ -1,6 +1,6 @@
 {
   "name": "@oneteme/raven",
-  "version": "1.0.0-beta",
+  "version": "1.0.1-beta",
   "description": "Request Archive for Virtual Endpoint Navigation",
   "private": false,
   "homepage": "https://github.com/oneteme/raven#readme",
@@ -18,15 +18,12 @@
     "type": "git",
     "url": "https://github.com/oneteme/raven.git"
   },
-  "license": "ISC",
-  "type": "commonjs",
-  "main": "src/raven.js",
+  "license": "MIT",
+  "main": "dist/raven.js",
   "unpkg": "dist/raven.min.js",
   "jsdelivr": "dist/raven.min.js",
   "style": "dist/raven.min.css",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist/*.{css,js}"],
   "scripts": {
     "build": "vite build"
   },
