@@ -27,7 +27,7 @@ jobs:
         scope: '@oneteme'
     - uses: oneteme/automation-scripts/.github/actions/npm-build-project@main
     - name: Publish NPM Package
-      run: npm publish "./dist" --access public
+      run: npm publish --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     - uses: oneteme/automation-scripts/.github/actions/npm-project-version@main
