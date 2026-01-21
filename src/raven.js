@@ -3,6 +3,7 @@ import "./cache-db.js";
 import "./raven-interceptor.js";
 import "./record.js";
 import "./modal.js";
+import { rLocalStrg, rModes, rStates } from "./constants.js";
 
 let
   panelHoverTimeOut,
@@ -33,11 +34,11 @@ const recordedUrlsContainer = createRecordUrls();
 function createIndicator() {
   const indicator = document.createElement('div');
   indicator.className = 'raven-indicator';
-  
+
   const icon = document.createElement('div');
   icon.className = 'raven-indicator__icon';
   icon.innerHTML = 'RAVEN';
-  
+
   indicator.appendChild(icon);
   return indicator;
 }
@@ -45,7 +46,7 @@ function createIndicator() {
 function createPanel() {
   const panel = document.createElement('div');
   panel.className = 'raven-panel';
-  
+
   // Keep panel open when hovering over it
   panel.addEventListener('mouseenter', () => {
     panelHoverTimeOut = clearTimeout(panelHoverTimeOut)
@@ -63,7 +64,7 @@ function createPanel() {
       indicator.style.opacity = '1';
     }, panelHideTimer);
   });
-  
+
   return panel;
 }
 
@@ -85,7 +86,7 @@ function createToggleButton() {
       examplesContainer.classList.remove('raven-examples-container--visible');
     }
   });
-  
+
   return toggleButton;
 }
 
@@ -109,7 +110,7 @@ function createRecordButton(recordIcon) {
       stopRecording();
     }
   });
-  
+
   return button;
 }
 
@@ -132,7 +133,7 @@ function createRecordUrls() {
   const recordedUrlsTitle = document.createElement('div');
   recordedUrlsTitle.className = 'raven-recorded-urls__title';
   recordedUrlsTitle.innerHTML = 'Recorded Pages <span id="recordedCount" class="raven-recorded-urls__count">0</span>';
-  
+
   recordedUrlsContainer.appendChild(recordedUrlsTitle);
   recordedUrlsContainer.appendChild(urlsList);
   return recordedUrlsContainer;
@@ -174,7 +175,7 @@ function addRecordedUrl(url, title = null) {
     urlItem.appendChild(bullet);
     urlItem.appendChild(textContainer);
     urlsList.appendChild(urlItem);
-    
+
     // Update counter
     setPageCount(pages.size)
   }
@@ -188,17 +189,22 @@ function setPageCount(count) {
 }
 
 // RAVEN EXAMPLES
-loadSessions();
+assembleSessions();
 assembleDOM();
 createEvents();
 
-function assembleSessions(sessions) {
-  sessions.forEach((session, index) => {
-    createSession(session)
-  });
+function assembleSessions() {
+  loadSessions().then(() => {
+    window.QUERIES.list("session").then(sessions => {
+      const sessionsDiv = sessions.map(createSession)
+      console.log("sessions : ", sessions)
+      // examplesContainer.appendChild(sessions);
+    })
+  })
+
 }
 
-async function createSession(session) {
+function createSession(session) {
   const item = document.createElement('div');
   item.className = 'raven-session-item';
 
@@ -213,37 +219,59 @@ async function createSession(session) {
   item.appendChild(titleEl);
   item.appendChild(descEl);
 
-  item.addEventListener('click', async () => {
+  item.addEventListener('click', () => {
     QUERIES.getByIndex("route", "by_session", session.id).then(sessionRoute => {
-      if (sessionRoute.length > 0) {
-        localStorage.setItem("loadedExample", session.id)
+      if (sessionRoute) {
+        localStorage.setItem(rLocalStrg.EXAMPLE, session.id)
+        localStorage.setItem(rLocalStrg.STATE, rStates.REPLAY)
         window.RAVEN.loadedExample = session.id
+        window.RAVEN.state = rStates.REPLAY
         setTimeout(() => {
-          window.location.href = sessionRoute[0].route;
+          window.location.href = sessionRoute.route;
+          window.location.reload()
         }, 200);
       }
     })
   });
-
-  examplesContainer.appendChild(item);
+  examplesContainer.append(item)
+  return item
 }
 
-async function loadSessions() {
-  window.QUERIES.list("session").then(sessions => {
-    if (sessions.length > 0) {
-      assembleSessions(sessions)
-    }
-  });
+function loadSessions() {
+  return new Promise(resolve => {
+    if (window.RAVEN.Mode == rModes.MANUAL) {
+      resolve();
+    } else if (window.RAVEN.Mode == rModes.AUTO && window.RAVEN.loadedFiles != null)
+      window.QUERIES.list("session").then(sessions => {
+        console.log("sessions : ", sessions)
+        if (sessions.length <= 0) {
+          console.log("files exist and Raven is on AUTO Mode")
+          fetch(window.RAVEN.loadedFiles).then((response) => response.json()).then(files => {
+            console.log("index files : ", files);
+            loadFile(files, 0, resolve);
+          })
+        } else {
+          resolve();
+        }
+      });
+  })
 }
 
-async function saveExample(example, exampleContent) {
-  exCount++
-  const title = example.title ?? "example " + exCount;
-  const description = example.description ?? title + " description";
-  const metaData = { json: exampleContent, title, description, url: exampleContent.url };
-  const savedExample = await window.QUERIES.saveExample(metaData)
-  metaData["metadataId"] = savedExample
-  createSession(metaData)
+function loadFile(files, index, resolve) {
+  console.log("loaded path : ", files[index].path)
+  fetch(files[index].path).then(response => response.json()).then(json => {
+    console.log("json : ", json)
+    window.QUERIES.insertSession(json).then(session => {
+      console.log("all requests and routes for session : ", session, " have been inserted successfully")
+      if (++index < files.length) {
+        loadFile(files, index, resolve)
+      }
+      else {
+        resolve();
+      }
+    })
+
+  })
 }
 
 // ASSEMBLE RAVEN
@@ -262,15 +290,6 @@ function createEvents() {
     panel.classList.remove('raven-panel--hidden');
     indicator.style.opacity = '0';
   });
-
-  addEventListener("saveExample", (e) => {
-    const example = { 
-      "title": e.detail.title ?? null, 
-      "description": e.detail.description ?? null 
-    };
-    const jsonData = e.detail.json;
-    saveExample(example, jsonData)
-  })
 }
 
 // HELPER RAVEN FUNCTIONS

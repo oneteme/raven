@@ -55,129 +55,79 @@ import * as utils from "./settings.js";
     // -----------------------------
     // HELPER TO USE STORE(S)
     // -----------------------------
-    function useStore2(stores, mode = 'readonly', dbName = DB_NAME, dbVersion = VERSION) {
 
-    }
-    function useStores(db, stores, mode) {
-        // //utils.debugRaven("creating transaction for Stores -> ", stores, " with mode : ", mode)
-        let storesObj = {}
-        const tx = db.transaction(stores, mode);
-        // More than one store
-        if (stores.length > 1) {
-            for (const store of stores) {
-                storesObj[store] = tx.objectStore(store);
-            }
-        } else { // only one store
-            storesObj = tx.objectStore(stores[0]);
-        }
-        return storesObj;
-    }
-
-    function getByIndexHelperFn(fn, storeName, indexName, ...args) {
-        const key = args.length === 1 ? args[0] : args;
-        // if (key && !key.includes(null)) {
+    function getByIndexHelperFn(storeName, indexName, fn) {
         return openDB().then(db => {
-            const store = useStores(db, [storeName], "readonly");
-            const index = store.index(indexName);
-            return new Promise(resolve => {
-                const req = index[fn](key);
-                req.onsuccess = () => { //utils.debugRaven("get by index result: ", req.result, " key : ", key, " store : ", storeName, " indexName : ", indexName);
-                    resolve(req.result)
-                };
-                req.onerror = () => { //utils.debugRaven("Could not find index for store ", storeName, " and index : ", args);
-                    resolve([])
-                };
+            const tx = db.transaction([storeName], "readonly");
+            const index = tx.objectStore(storeName).index(indexName);
+            return new Promise((res, rej) => {
+                const req = fn(index);
+                req.onsuccess = evn => res(evn.target.result)
+                req.onerror = err => rej(err);
             });
         })
-        // }
-        // return new Promise(resolve => {
-        //     resolve([])
-        // })
     }
     // -----------------------------
     // PUBLIC QUERY FUNCTIONS
     // -----------------------------
     window.QUERIES = {
-        save(storeName, snapshot) {
-            useStore(storeName, 'readwrite').then(store => store.add(snapshot).result)
-        },
         list(storeName) {
             return openDB().then(db => {
-                const store = useStores(db, [storeName], "readonly");
-                return new Promise(resolve => {
-                    //utils.debugRaven("list store : ", store)
-                    const req = store.getAll();
-                    req.onsuccess = () => resolve(req.result);
-                    req.onerror = () => console.error("IndexedDB listing failed")
+                const tx = db.transaction([storeName], "readonly");
+                return new Promise((res, rej) => {
+                    const req = tx.objectStore(storeName).getAll();
+                    req.onsuccess = evn => res(evn.target.result);
+                    req.onerror = err => rej(err)
                 })
             })
         },
         getById(storeName, id) {
             return openDB().then(db => {
-                const store = useStores(db, [storeName], "readonly");
-                return new Promise(resolve => {
-                    const req = store.get(id);
-                    req.onsuccess = () => { //utils.debugRaven("getById result -> ", req.result);
-                        resolve(req.result)
-                    };
-                    req.onerror = () => { console.log("error") }
+                const tx = db.transaction([storeName], "readonly");
+                return new Promise((res, rej) => {
+                    const req = tx.objectStore(storeName).get(id);
+                    req.onsuccess = evn => res(evn.target.result);
+                    req.onerror = err => rej(err)
                 })
             })
         },
         getByIndex(storeName, indexName, ...args) {
             const key = args.length === 1 ? args[0] : args;
-            // if (key && !key.includes(null)) {
-            return openDB().then(db => {
-                const store = useStores(db, [storeName], "readonly");
-                const index = store.index(indexName);
-                return new Promise(resolve => {
-                    const req = index.getAll(key);
-                    req.onsuccess = () => { //utils.debugRaven("get by index result: ", req.result, " key : ", key, " store : ", storeName, " indexName : ", indexName);
-                        resolve(req.result)
-                    };
-                    req.onerror = () => { //utils.debugRaven("Could not find index for store ", storeName, " and index : ", args);
-                        resolve([])
-                    };
-                });
-            })
+            return getByIndexHelperFn(storeName, indexName, idx => idx.get(key));
         },
         getAllByIndex(storeName, indexName, ...args) {
-            return getByIndexHelperFn("getAll", storeName, indexName, args).then(
-                data => {
-                    return new Promise(resolve => {
-                        resolve(data)
-                    })
-                }
-            )
-        },
-        remove(storeName, id) {
-            return openDB().then(db => {
-                const store = useStores(db, [storeName], "readwrite")
-                store.delete(id);
-                //utils.debugRaven("removed ", storeName, " with ID : ", id)
-            })
+            const key = args.length === 1 ? args[0] : args;
+            return getByIndexHelperFn(storeName, indexName, idx => idx.getAll(key));
         },
 
-        saveExample(metaData) {
-            //utils.debugRaven("saving...", metaData)
-            openDB().then(db => {
-                const stores = useStores(db, [SCHEMAS.SESSION.store, SCHEMAS.ROUTES.store, SCHEMAS.REQUESTS.store], 'readwrite')
-                stores[SCHEMAS.SESSION.store].add({ title: metaData.title, description: metaData.description }).onsuccess = e1 => {
-                    for (const route of Object.keys(metaData.navigations)) {
-                        const requests = metaData.navigations[route];
-                        stores[SCHEMAS.ROUTES.store].add({ route, "sessionId": e1.target.result }).onsuccess = e2 => {
-                            // Loop through requests in the route
-                            for (const request of Object.keys(requests)) {
-                                stores[SCHEMAS.REQUESTS.store].add({ routeId: e2.target.result, url: request, xhr: requests[request] })
-                            }
-                            utils.debugRaven("saved...", metaData)
-                            //tx.commit();
-                        }
-                    }
-                };
+        insertSession(metaData) {
+            utils.debugRaven("saving...", metaData)
+            return new Promise((res, rej) => {
+                openDB().then(db => {
+                    const tx = db.transaction([SCHEMAS.SESSION.store, SCHEMAS.ROUTES.store, SCHEMAS.REQUESTS.store], 'readwrite'),
+                        sessionStore = tx.objectStore(SCHEMAS.SESSION.store),
+                        routeStore = tx.objectStore(SCHEMAS.ROUTES.store),
+                        requestStore = tx.objectStore(SCHEMAS.REQUESTS.store);
+                    sessionStore.add({ title: metaData.title, description: metaData.description }).onsuccess = evn => {
+                        const sessionId = evn.target.result;
+                        saveRoutes(routeStore, requestStore, metaData.navigations, sessionId)
+                    };
+                    tx.oncomplete = evn => res(evn.target.result);
+                    tx.onerror = err => rej(err)
+                })
             })
         }
-
     };
     console.log('📦 IndexedDB ready');
 })();
+
+function saveRoutes(routesStore, requestsStore, routes, sessionId) {
+    for (const route of Object.keys(routes)) {
+        const requests = routes[route];
+        routesStore.add({ route, "sessionId": sessionId }).onsuccess = evn => {
+            for (const request of Object.keys(requests)) {
+                requestsStore.add({ routeId: evn.target.result, url: request, xhr: requests[request] });
+            }
+        }
+    }
+}

@@ -1,10 +1,10 @@
 import { rLocalStrg, rModes, rStates } from "./constants.js";
 
 (function () {
-    if (window.RAVEN.isEnabled) {
+    if (window.RAVEN.Mode == rModes.MANUAL) {
         window.addEventListener('keydown', function (e) {
             // Ctrl + Shift + R => Record
-            if (window.RAVEN.Mode == rModes.MANUAL && e.ctrlKey && e.shiftKey && e.key === 'R') {
+            if (e.ctrlKey && e.shiftKey && e.key === 'R') {
                 e.preventDefault();
                 if (window.RAVEN.isRecordMode) {
                     snapshot()
@@ -17,10 +17,8 @@ import { rLocalStrg, rModes, rStates } from "./constants.js";
                 e.preventDefault();
                 if (window.RAVEN.isReplayMode) {
                     localStorage.removeItem(rLocalStrg.EXAMPLE)
-                    localStorage.setItem(rLocalStrg.MODE, rModes.MANUAL)
                     localStorage.setItem(rLocalStrg.STATE, rStates.PASSIVE)
                 } else {
-                    localStorage.setItem(rLocalStrg.MODE, rModes.AUTO)
                     localStorage.setItem(rLocalStrg.STATE, rStates.REPLAY)
                 }
                 window.location.reload()
@@ -33,6 +31,7 @@ import { rLocalStrg, rModes, rStates } from "./constants.js";
             snapshot();
         })
         const record = () => {
+            localStorage.removeItem(rLocalStrg.EXAMPLE)
             localStorage.setItem(rLocalStrg.STATE, rStates.RECORD)
             window.location.reload()
         }

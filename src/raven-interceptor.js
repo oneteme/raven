@@ -71,6 +71,7 @@
 
     // LOAD INTERCEPTOR
     function loadXHR(xhr) {
+        console.log("loadXHR : ", xhr)
         const originalSend = xhr.send;
         xhr.send = function () {
             if (xhr.__method !== 'GET') {
@@ -79,23 +80,21 @@
             // xhr.abort();
             window.QUERIES.getByIndex("route", "by_session_url", window.RAVEN.loadedExample, xhr.__pageUrl)
                 .then(route => {
-                    if (!route || route.length === 0) {
-                        console.warn("route not found")
-                        // return originalSend.apply(xhr, arguments);
+                    if (!route) {
+                        console.warn("route not found -> ", xhr.__pageUrl)
                         fakeEmptyResponse(xhr)
                         return;
                     }
-                    route = route[0]
                     window.QUERIES.getByIndex("request", "by_route", route.id, encodeURIComponent(xhr.__url))
                         .then(request => {
-                            if (!request || request.length === 0) {
+                            if (!request) {
                                 console.warn("🔴 could not find request for url : ", xhr.__url, "page url : ", xhr.__pageUrl, " route id : ", route.id)
-                                // return originalSend.apply(xhr, arguments);
                                 fakeEmptyResponse(xhr)
                                 return;
                             }
-                            const fakeXHR = request[0].xhr,
+                            const fakeXHR = request.xhr,
                                 fakeResponse = JSON.stringify(fakeXHR.response)
+                            console.log("FOUND RESPONSE : ", fakeXHR)
                             Object.defineProperties(xhr, {
                                 readyState: { get: () => fakeXHR.readyState },
                                 status: { get: () => fakeXHR.status },
@@ -151,7 +150,9 @@
         recordCache["title"] = e.detail.title;
         recordCache["description"] = e.detail.description;
         downloadJson(recordCache, recordCache["title"] + ".json")
-        window.QUERIES.saveExample(recordCache)
+        window.QUERIES.insertSession(recordCache).then(session => {
+            console.log("session inserted : ", session)
+        })
     });
     function downloadJson(json, filename = 'cache.json') {
         const blob = new Blob(
