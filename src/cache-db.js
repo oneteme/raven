@@ -5,7 +5,7 @@ import * as utils from "./settings.js";
     const VERSION = 1;
 
     const SCHEMAS = {
-        REQUESTS: { store: 'request', indexes: [{ index: 'by_route', columns: ["routeId", "url"] }] },
+        REQUESTS: { store: 'request', indexes: [{ index: 'by_route_request', columns: ["routeId", "url"] }, { index: 'by_route', columns: "routeId" }] },
         SESSION: { store: 'session', indexes: [{ index: 'by_title', columns: "title" }] },
         ROUTES: {
             store: 'route', indexes: [
@@ -52,10 +52,6 @@ import * as utils from "./settings.js";
         });
 
     }
-    // -----------------------------
-    // HELPER TO USE STORE(S)
-    // -----------------------------
-
     function getByIndexHelperFn(storeName, indexName, fn) {
         return openDB().then(db => {
             const tx = db.transaction([storeName], "readonly");
@@ -66,7 +62,7 @@ import * as utils from "./settings.js";
                 req.onerror = err => rej(err);
             });
         })
-    }
+    };
     // -----------------------------
     // PUBLIC QUERY FUNCTIONS
     // -----------------------------
@@ -99,7 +95,6 @@ import * as utils from "./settings.js";
             const key = args.length === 1 ? args[0] : args;
             return getByIndexHelperFn(storeName, indexName, idx => idx.getAll(key));
         },
-
         insertSession(metaData) {
             utils.debugRaven("saving...", metaData)
             return new Promise((res, rej) => {
@@ -116,10 +111,56 @@ import * as utils from "./settings.js";
                     tx.onerror = err => rej(err)
                 })
             })
+        },
+        exportSession(session) {
+            let navigations = {},
+                exportedData = {
+                    "title": session.title,
+                    "description": session.description,
+                    "navigations": navigations
+                }
+            return new Promise((res, rej) => {
+                openDB().then(db => {
+                    const tx = db.transaction([SCHEMAS.ROUTES.store, SCHEMAS.REQUESTS.store], "readonly"),
+                        routesCursor = tx.objectStore(SCHEMAS.ROUTES.store)
+                            .index('by_session')
+                            .openCursor(IDBKeyRange.only(session.id)),
+                        requestindex = tx.objectStore(SCHEMAS.REQUESTS.store).index('by_route');
+                    routesCursor.onsuccess = (evnRoute) => {
+                        const routeCur = evnRoute.target.result;
+                        if (routeCur) {
+                            const route = routeCur.value;
+                            navigations[route.route] = {}
+                            let requestsCursor = requestindex.openCursor(IDBKeyRange.only(route.id));
+                            requestsCursor.onsuccess = (evnReq) => {
+                                const reqCur = evnReq.target.result;
+                                if (reqCur) {
+                                    const request = reqCur.value;
+                                    navigations[route.route][request.url] = request.xhr;
+                                    reqCur.continue()
+                                } else {
+                                    routeCur.continue();
+                                }
+                            }
+                        } else {
+                            exportedData["navigations"] = navigations
+                        }
+                    };
+
+                    //TRANSACTION FINISHED
+                    tx.oncomplete = () => res(exportedData);
+                    tx.onerror = err => rej(err)
+                })
+            })
         }
     };
+
     console.log('📦 IndexedDB ready');
 })();
+
+// -----------------------------
+// HELPER TO USE STORE(S)
+// -----------------------------
 
 function saveRoutes(routesStore, requestsStore, routes, sessionId) {
     for (const route of Object.keys(routes)) {
@@ -130,4 +171,4 @@ function saveRoutes(routesStore, requestsStore, routes, sessionId) {
             }
         }
     }
-}
+};

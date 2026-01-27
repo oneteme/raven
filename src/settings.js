@@ -1,8 +1,8 @@
 import { rLocalStrg, rModes, rStates } from "./constants.js";
 
 // SETUP RAVEN
-setupRAVEN();
-function setupRAVEN() {
+RAVEN();
+function RAVEN() {
 
     console.log("test raven link")
     const loadedExample = Number.parseInt(localStorage.getItem(rLocalStrg.EXAMPLE));
@@ -13,14 +13,15 @@ function setupRAVEN() {
     } else if (checkParamValue(window.rMode, rModes)) {
         rMode = window.rMode
     }
-    if (checkParamValue(localStorage.getItem(rLocalStrg.STATE), rStates)) {
-        ravenState = localStorage.getItem(rLocalStrg.STATE)
-    } else if (!Number.isNaN(loadedExample)) {
+    if (!Number.isNaN(loadedExample) || rMode == rModes.AUTO) {
         ravenState = rStates.REPLAY
+        localStorage.setItem(rLocalStrg.STATE, rStates.REPLAY)
+    } else if (checkParamValue(localStorage.getItem(rLocalStrg.STATE), rStates)) {
+        ravenState = localStorage.getItem(rLocalStrg.STATE)
     }
     window.RAVEN = {
         Mode: rMode,
-        isReplayMode: rMode == rModes.AUTO || (rMode == rModes.MANUAL && (ravenState == rStates.REPLAY || !Number.isNaN(loadedExample))),
+        isReplayMode: ravenState == rStates.REPLAY,
         isRecordMode: rMode == rModes.MANUAL && ravenState == rStates.RECORD,
         state: ravenState,
         isEnabled: rMode != rModes.DISABLED,

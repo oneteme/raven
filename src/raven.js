@@ -4,6 +4,7 @@ import "./raven-interceptor.js";
 import "./record.js";
 import "./modal.js";
 import { rLocalStrg, rModes, rStates } from "./constants.js";
+import { debugRaven } from "./settings.js";
 
 let
   panelHoverTimeOut,
@@ -23,9 +24,12 @@ container.className = 'raven-container';
 
 const indicator = createIndicator();
 const panel = createPanel();
+const modeHeader = createModeHeader();
+const logo = createLogo();
 const toggleButton = createToggleButton();
 const recordIcon = createRecordIcon();
 const button = createRecordButton(recordIcon);
+const downloadButton = createDownloadButton();
 const examplesContainer = createExamplesContainer();
 const urlsList = createRecordUrlsList();
 const recordedUrlsContainer = createRecordUrls();
@@ -33,7 +37,7 @@ const recordedUrlsContainer = createRecordUrls();
 // WIDGETS HELPERS
 function createIndicator() {
   const indicator = document.createElement('div');
-  indicator.className = 'raven-indicator';
+  indicator.className = 'raven-indicator raven-indicator--passive';
 
   const icon = document.createElement('div');
   icon.className = 'raven-indicator__icon';
@@ -41,6 +45,35 @@ function createIndicator() {
 
   indicator.appendChild(icon);
   return indicator;
+}
+function createModeHeader() {
+  const header = document.createElement('div');
+  header.className = 'raven-mode-header raven-mode-header--manual';
+  header.textContent = 'Manual Mode';
+  return header;
+}
+
+function createLogo() {
+  const logoContainer = document.createElement('div');
+  logoContainer.className = 'raven-logo raven-logo--passive';
+
+  const centerLetter = document.createElement('div');
+  centerLetter.className = 'raven-logo__center';
+  centerLetter.textContent = 'R';
+
+  const topText = document.createElement('div');
+  topText.className = 'raven-logo__top';
+  topText.textContent = 'RAVEN';
+
+  const bottomText = document.createElement('div');
+  bottomText.className = 'raven-logo__bottom';
+  bottomText.textContent = 'AVEN';
+
+  logoContainer.appendChild(centerLetter);
+  logoContainer.appendChild(topText);
+  logoContainer.appendChild(bottomText);
+
+  return logoContainer;
 }
 
 function createPanel() {
@@ -114,6 +147,31 @@ function createRecordButton(recordIcon) {
   return button;
 }
 
+function createDownloadButton() {
+  const button = document.createElement('div');
+  button.className = 'raven-download-button';
+
+  // Create SVG download icon
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  icon.setAttribute('class', 'raven-download-button__icon');
+  icon.setAttribute('viewBox', '0 0 24 24');
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', 'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z');
+
+  icon.appendChild(path);
+  button.appendChild(icon);
+
+  // Download functionality
+  button.addEventListener('click', () => {
+    console.log('Download clicked');
+    window.QUERIES.list("session").then(sessions => {
+      exportSessions(sessions)
+    })
+  });
+
+  return button;
+}
 function createExamplesContainer() {
   const examplesContainer = document.createElement('div');
   examplesContainer.className = 'raven-examples-container raven-scroll';
@@ -188,11 +246,23 @@ function setPageCount(count) {
   }
 }
 
-// RAVEN EXAMPLES
-assembleSessions();
-assembleDOM();
-createEvents();
-
+// SESSIONS FUNCITONS
+function exportSessions(sessions, index = 0, indexJson = { "dir": "", "files": [] }) {
+  const session = sessions[index]
+  window.QUERIES.exportSession(session).then(exportedJson => {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-'),
+      jsonName = exportedJson.title.replaceAll(" ", "_") + "_" + timestamp + ".json";
+    downloadJson(exportedJson, jsonName)
+    indexJson.files.push(jsonName)
+    console.log("export session index : ", index)
+    if (++index < sessions.length) {
+      exportSessions(sessions, index, indexJson)
+    } else {
+      console.log("indexJson : ", indexJson)
+      downloadJson(indexJson, "index.json")
+    }
+  })
+}
 function assembleSessions() {
   loadSessions().then(() => {
     window.QUERIES.list("session").then(sessions => {
@@ -246,9 +316,9 @@ function loadSessions() {
         console.log("sessions : ", sessions)
         if (sessions.length <= 0) {
           console.log("files exist and Raven is on AUTO Mode")
-          fetch(window.RAVEN.loadedFiles).then((response) => response.json()).then(files => {
-            console.log("index files : ", files);
-            loadFile(files, 0, resolve);
+          fetch(window.RAVEN.loadedFiles).then((response) => response.json()).then(jsonIndex => {
+            console.log("index files : ", jsonIndex);
+            loadFile(jsonIndex.files, 0, jsonIndex.dir ?? "", resolve);
           })
         } else {
           resolve();
@@ -257,14 +327,14 @@ function loadSessions() {
   })
 }
 
-function loadFile(files, index, resolve) {
-  console.log("loaded path : ", files[index].path)
-  fetch(files[index].path).then(response => response.json()).then(json => {
+function loadFile(files, index, dir, resolve) {
+  console.log("loaded path : ", dir + "/" + files[index])
+  fetch(dir + "/" + files[index]).then(response => response.json()).then(json => {
     console.log("json : ", json)
     window.QUERIES.insertSession(json).then(session => {
       console.log("all requests and routes for session : ", session, " have been inserted successfully")
       if (++index < files.length) {
-        loadFile(files, index, resolve)
+        loadFile(files, index, dir, resolve)
       }
       else {
         resolve();
@@ -273,10 +343,16 @@ function loadFile(files, index, resolve) {
 
   })
 }
-
 // ASSEMBLE RAVEN
 function assembleDOM() {
-  panel.appendChild(button);
+  panel.appendChild(modeHeader);
+  panel.appendChild(logo);
+  if (window.RAVEN.Mode == rModes.MANUAL && !window.RAVEN.isRecordMode) {
+    console.log("Export button")
+    panel.appendChild(downloadButton);
+  }
+  setMode(window.RAVEN.Mode)
+  setState(window.RAVEN.state)
   panel.appendChild(examplesContainer);
   panel.appendChild(recordedUrlsContainer);
   container.appendChild(panel);
@@ -293,10 +369,53 @@ function createEvents() {
 }
 
 // HELPER RAVEN FUNCTIONS
+function setMode(mode) {
+  console.log("setting RAVEN MODE : ", mode)
+  // Update mode header
+  modeHeader.className = `raven-mode-header raven-mode-header--${mode}`;
+  modeHeader.textContent = mode === rModes.MANUAL ? 'Manual Mode' : 'Auto Mode';
+
+  // Update panel style
+  panel.classList.remove('raven-panel--manual', 'raven-panel--auto');
+  panel.classList.add(`raven-panel--${mode}`);
+}
+
+function setState(state) {
+  console.log("setting RAVEN STATE : ", state)
+  // Update indicator
+  indicator.className = `raven-indicator raven-indicator--${state}`;
+
+  // Update logo
+  logo.className = `raven-logo raven-logo--${state}`;
+
+  // Update logo text based on state
+  const topText = logo.querySelector('.raven-logo__top');
+  const bottomText = logo.querySelector('.raven-logo__bottom');
+
+  if (state === rStates.RECORD) {
+    topText.textContent = 'AVEN';
+    bottomText.textContent = 'ECORD';
+    panel.appendChild(button);
+    startRecording();
+  } else if (state === rStates.REPLAY) {
+    topText.textContent = 'AVEN';
+    bottomText.textContent = 'EPLAY';
+    panel.appendChild(toggleButton);
+  } else {
+    topText.textContent = 'RAVEN';
+    bottomText.textContent = 'AVEN';
+    panel.appendChild(button);
+    panel.appendChild(toggleButton);
+  }
+}
+
 function startRecording() {
   recordIcon.classList.add('raven-record-icon--recording');
   button.classList.add('raven-record-button--recording');
   recordedUrlsContainer.classList.add('raven-recorded-urls--visible');
+  setTimeout(() => {
+    addRecordedUrl(location.hash, document.title)
+  }, 1000);
 }
 
 function stopRecording() {
@@ -317,18 +436,25 @@ function detectNavigation() {
   }, 100);
 }
 
+function downloadJson(json, filename = 'cache.json') {
+  const blob = new Blob(
+    [JSON.stringify(json, null, 2)],
+    { type: 'application/json' }
+  );
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 function stopNavigationDetection() {
   clearInterval(navigationInterval);
 }
 
 if (window.RAVEN.isEnabled) {
+  assembleSessions();
+  assembleDOM();
+  createEvents();
   document.body.appendChild(container);
-  if (window.RAVEN.isRecordMode) {
-    startRecording();
-    setTimeout(() => {
-      addRecordedUrl(location.hash, document.title)
-    }, 1000);
-  } else {
-    panel.appendChild(toggleButton);
-  }
 }

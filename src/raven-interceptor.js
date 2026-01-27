@@ -1,3 +1,4 @@
+import { debugRaven } from "./settings";
 (function () {
     let recordCache = {};
 
@@ -85,16 +86,18 @@
                         fakeEmptyResponse(xhr)
                         return;
                     }
-                    window.QUERIES.getByIndex("request", "by_route", route.id, encodeURIComponent(xhr.__url))
+                    console.log("routeId : ", route.id)
+                    window.QUERIES.getByIndex("request", "by_route_request", route.id, encodeURIComponent(xhr.__url))
                         .then(request => {
                             if (!request) {
                                 console.warn("🔴 could not find request for url : ", xhr.__url, "page url : ", xhr.__pageUrl, " route id : ", route.id)
                                 fakeEmptyResponse(xhr)
                                 return;
                             }
+                            debugRaven("FOUND REQUEST : ", request)
                             const fakeXHR = request.xhr,
                                 fakeResponse = JSON.stringify(fakeXHR.response)
-                            console.log("FOUND RESPONSE : ", fakeXHR)
+                            // console.log("FOUND RESPONSE : ", fakeXHR)
                             Object.defineProperties(xhr, {
                                 readyState: { get: () => fakeXHR.readyState },
                                 status: { get: () => fakeXHR.status },
@@ -149,21 +152,9 @@
     addEventListener("snapshot", (e) => {
         recordCache["title"] = e.detail.title;
         recordCache["description"] = e.detail.description;
-        downloadJson(recordCache, recordCache["title"] + ".json")
         window.QUERIES.insertSession(recordCache).then(session => {
             console.log("session inserted : ", session)
+            window.location.reload()
         })
     });
-    function downloadJson(json, filename = 'cache.json') {
-        const blob = new Blob(
-            [JSON.stringify(json, null, 2)],
-            { type: 'application/json' }
-        );
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(a.href);
-    }
-
 })();

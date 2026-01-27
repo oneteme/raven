@@ -1,720 +1,562 @@
 /* Main Container */
 .raven-container {
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 9999;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: auto;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
 }
 
 /* Indicator */
 .raven-indicator {
-    width: 64px;
-    height: 8px;
-    background: linear-gradient(90deg, #00a8ff 0%, #0077ff 100%);
-    border-radius: 2px 2px 0 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 -2px 8px rgba(0, 120, 255, 0.3);
+  width: 64px;
+  height: 8px;
+  background: linear-gradient(90deg, #00a8ff 0%, #0077ff 100%);
+  border-radius: 2px 2px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 -2px 8px rgba(0, 120, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.raven-indicator--passive {
+  background: linear-gradient(90deg, #00a8ff 0%, #0077ff 100%);
+  box-shadow: 0 -2px 8px rgba(0, 120, 255, 0.3);
+}
+
+.raven-indicator--recording {
+  background: linear-gradient(90deg, #ff3d3d 0%, #c62828 100%);
+  box-shadow: 0 -2px 8px rgba(255, 61, 61, 0.5);
+}
+
+.raven-indicator--demo {
+  background: linear-gradient(90deg, #4caf50 0%, #2e7d32 100%);
+  box-shadow: 0 -2px 8px rgba(76, 175, 80, 0.5);
 }
 
 .raven-indicator__icon {
-    font-size: 8px;
-    color: white;
-    margin-top: -1px;
+  font-size: 8px;
+  color: white;
+  margin-top: -1px;
+  font-weight: 600;
 }
 
 /* Panel */
 .raven-panel {
-    background: linear-gradient(135deg, rgba(20, 20, 40, 0.98) 0%, rgba(10, 10, 30, 0.98) 100%);
-    backdrop-filter: blur(10px);
-    border-radius: 16px 16px 0 0;
-    padding: 8px 12px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    opacity: 0;
-    transform: translateY(100%);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom: none;
-    max-height: 80vh;
-    overflow: hidden;
+  background: linear-gradient(135deg, rgba(20, 20, 40, 0.98) 0%, rgba(10, 10, 30, 0.98) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 16px 16px 0 0;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.raven-panel--manual {
+  background: linear-gradient(135deg, rgba(20, 20, 40, 0.98) 0%, rgba(10, 10, 30, 0.98) 100%);
+  border-color: rgba(0, 168, 255, 0.3);
+}
+
+.raven-panel--auto {
+  background: linear-gradient(135deg, rgba(40, 20, 40, 0.98) 0%, rgba(30, 10, 30, 0.98) 100%);
+  border-color: rgba(156, 39, 176, 0.3);
 }
 
 .raven-panel--visible {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-    height: auto;
-    padding: 8px 12px;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  height: auto;
+  padding: 0px 12px;
 }
 
 .raven-panel--hidden {
-    opacity: 0;
-    transform: translateY(100%);
-    pointer-events: none;
-    height: 0;
-    padding: 0;
+  opacity: 0;
+  transform: translateY(100%);
+  pointer-events: none;
+  height: 0;
+  padding: 0;
+}
+
+/* Mode Header */
+.raven-mode-header {
+  width: 100%;
+  text-align: center;
+  padding: 6px 12px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.raven-mode-header--manual {
+  background: rgba(0, 168, 255, 0.15);
+  border: 1px solid rgba(0, 168, 255, 0.3);
+  color: #00d4ff;
+}
+
+.raven-mode-header--auto {
+  background: rgba(156, 39, 176, 0.15);
+  border: 1px solid rgba(156, 39, 176, 0.3);
+  color: #ce93d8;
+}
+
+/* Logo Display */
+.raven-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  position: relative;
+  height: 48px;
+}
+
+.raven-logo__center {
+  font-size: 56px;
+  color: white;
+  line-height: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.raven-logo__top {
+  position: absolute;
+  top: 2px;
+  right: -55px;
+  font-size: 16px;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+.raven-logo__bottom {
+  position: absolute;
+  bottom: 2px;
+  right: -68px;
+  font-size: 16px;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+/* Passive state - just RAVEN */
+.raven-logo--passive .raven-logo__center {
+  display: none;
+}
+
+.raven-logo--passive .raven-logo__top {
+  position: static;
+  font-size: 24px;
+  color: #00a8ff;
+}
+
+.raven-logo--passive .raven-logo__bottom {
+  display: none;
+}
+
+/* Record state - RECORD RAVEN */
+.raven-logo--recording .raven-logo__center {
+  color: #ff3d3d;
+}
+
+.raven-logo--recording .raven-logo__bottom {
+  color: #ff8a80;
+}
+
+.raven-logo--recording .raven-logo__top {
+  color: #00a8ff;
+}
+
+/* Replay state - REPLAY RAVEN */
+.raven-logo--demo .raven-logo__center {
+  color: #4caf50;
+}
+
+.raven-logo--demo .raven-logo__bottom {
+  color: #81c784;
+}
+
+.raven-logo--demo .raven-logo__top {
+  color: #00a8ff;
 }
 
 /* Toggle Button */
 .raven-toggle-button {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.7);
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    user-select: none;
-    margin-top: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  user-select: none;
+  margin-top: 4px;
 }
 
 .raven-toggle-button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+/* Download Button */
+.raven-download-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: white;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
+.raven-download-button:hover {
+  transform: scale(1.1);
+}
+
+.raven-download-button__icon {
+  fill: white;
+}
 /* Record Button */
 .raven-record-button {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(229, 57, 53, 0.4);
-    position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.4);
+  position: relative;
 }
 
 .raven-record-button:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(229, 57, 53, 0.6);
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(229, 57, 53, 0.6);
 }
 
 .raven-record-button--recording {
-    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
 }
 
 /* Record Icon */
 .raven-record-icon {
-    width: 13px;
-    height: 13px;
-    background: white;
-    border-radius: 50%;
-    transition: all 0.3s ease;
+  width: 13px;
+  height: 13px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
 }
 
 .raven-record-icon--recording {
-    border-radius: 3px;
+  border-radius: 3px;
 }
 
 /* Examples Container */
 .raven-examples-container {
-    width: 280px;
-    max-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    transition: max-height 0.3s ease;
-    margin-top: 0;
+  width: 280px;
+  max-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: max-height 0.3s ease;
+  margin-top: 0;
 }
 
 .raven-examples-container--visible {
-    max-height: 300px;
-    margin-top: 8px;
+  max-height: 300px;
+  margin-top: 8px;
 }
 
 /* Recorded URLs Container */
 .raven-recorded-urls {
-    width: 280px;
-    max-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    transition: max-height 0.3s ease, opacity 0.3s ease;
-    margin-top: 0;
-    opacity: 0;
+  width: 280px;
+  max-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  margin-top: 0;
+  opacity: 0;
 }
 
 .raven-recorded-urls--visible {
-    max-height: 200px;
-    margin-top: 8px;
-    opacity: 1;
+  max-height: 200px;
+  margin-top: 8px;
+  opacity: 1;
 }
 
 .raven-recorded-urls__title {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.7);
-    font-weight: 600;
-    margin-bottom: 6px;
-    text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  margin-bottom: 6px;
+  text-align: center;
 }
 
 .raven-recorded-urls__count {
-    color: #4fc3f7;
-    font-weight: 700;
+  color: #4fc3f7;
+  font-weight: 700;
 }
 
 /* URLs List */
 .raven-urls-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 /* URL Item */
 .raven-url-item {
-    background: rgba(25, 118, 210, 0.1);
-    border: 1px solid rgba(25, 118, 210, 0.3);
-    border-radius: 4px;
-    padding: 6px 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  background: rgba(25, 118, 210, 0.1);
+  border: 1px solid rgba(25, 118, 210, 0.3);
+  border-radius: 4px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .raven-url-item:hover {
-    background: rgba(25, 118, 210, 0.2);
-    border-color: rgba(25, 118, 210, 0.5);
+  background: rgba(25, 118, 210, 0.2);
+  border-color: rgba(25, 118, 210, 0.5);
 }
 
 .raven-url-item__bullet {
-    width: 6px;
-    height: 6px;
-    background: #4fc3f7;
-    border-radius: 50%;
-    flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  background: #4fc3f7;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .raven-url-item__text-container {
-    flex: 1;
-    overflow: hidden;
+  flex: 1;
+  overflow: hidden;
 }
 
 .raven-url-item__title {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-bottom: 2px;
-    transition: white-space 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 2px;
+  transition: white-space 0.2s ease;
 }
 
 .raven-url-item:hover .raven-url-item__title {
-    white-space: normal;
+  white-space: normal;
 }
 
 .raven-url-item__url {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
-    font-size: 9px;
-    color: rgba(255, 255, 255, 0.5);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    transition: white-space 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: white-space 0.2s ease;
 }
 
 .raven-url-item:hover .raven-url-item__url {
-    white-space: normal;
+  white-space: normal;
 }
 
 .raven-url-item__url--single {
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.8);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Session Item */
 .raven-session-item {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    padding: 8px 10px;
-    margin-bottom: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .raven-session-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .raven-session-item__title {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 4px;
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    transition: white-space 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 4px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: white-space 0.2s ease;
 }
 
 .raven-session-item:hover .raven-session-item__title {
-    white-space: normal;
+  white-space: normal;
 }
 
 .raven-session-item__description {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    transition: white-space 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: white-space 0.2s ease;
 }
 
 .raven-session-item:hover .raven-session-item__description {
-    white-space: normal;
+  white-space: normal;
 }
 
 /* Custom Scrollbar */
 .raven-scroll::-webkit-scrollbar {
-    width: 6px;
+  width: 6px;
 }
 
 .raven-scroll::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
 }
 
 .raven-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
 }
 
 .raven-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-
-/* MODAL */
-/* Main Container */
-.raven-container {
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 9999;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: auto;
-}
-
-/* Indicator */
-.raven-indicator {
-    width: 64px;
-    height: 8px;
-    background: linear-gradient(90deg, #00a8ff 0%, #0077ff 100%);
-    border-radius: 2px 2px 0 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 -2px 8px rgba(0, 120, 255, 0.3);
-}
-
-.raven-indicator__icon {
-    font-size: 8px;
-    color: white;
-    margin-top: -1px;
-}
-
-/* Panel */
-.raven-panel {
-    background: linear-gradient(135deg, rgba(20, 20, 40, 0.98) 0%, rgba(10, 10, 30, 0.98) 100%);
-    backdrop-filter: blur(10px);
-    border-radius: 16px 16px 0 0;
-    padding: 8px 12px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    opacity: 0;
-    transform: translateY(100%);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom: none;
-    max-height: 80vh;
-    overflow: hidden;
-}
-
-.raven-panel--visible {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-    height: auto;
-    padding: 8px 12px;
-}
-
-.raven-panel--hidden {
-    opacity: 0;
-    transform: translateY(100%);
-    pointer-events: none;
-    height: 0;
-    padding: 0;
-}
-
-/* Toggle Button */
-.raven-toggle-button {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.7);
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    user-select: none;
-    margin-top: 4px;
-}
-
-.raven-toggle-button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.9);
-}
-
-/* Record Button */
-.raven-record-button {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(229, 57, 53, 0.4);
-    position: relative;
-}
-
-.raven-record-button:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(229, 57, 53, 0.6);
-}
-
-.raven-record-button--recording {
-    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
-}
-
-/* Record Icon */
-.raven-record-icon {
-    width: 13px;
-    height: 13px;
-    background: white;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.raven-record-icon--recording {
-    border-radius: 3px;
-}
-
-/* Examples Container */
-.raven-examples-container {
-    width: 280px;
-    max-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    transition: max-height 0.3s ease;
-    margin-top: 0;
-}
-
-.raven-examples-container--visible {
-    max-height: 300px;
-    margin-top: 8px;
-}
-
-/* Recorded URLs Container */
-.raven-recorded-urls {
-    width: 280px;
-    max-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    transition: max-height 0.3s ease, opacity 0.3s ease;
-    margin-top: 0;
-    opacity: 0;
-}
-
-.raven-recorded-urls--visible {
-    max-height: 200px;
-    margin-top: 8px;
-    opacity: 1;
-}
-
-.raven-recorded-urls__title {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.7);
-    font-weight: 600;
-    margin-bottom: 6px;
-    text-align: center;
-}
-
-.raven-recorded-urls__count {
-    color: #4fc3f7;
-    font-weight: 700;
-}
-
-/* URLs List */
-.raven-urls-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-/* URL Item */
-.raven-url-item {
-    background: rgba(25, 118, 210, 0.1);
-    border: 1px solid rgba(25, 118, 210, 0.3);
-    border-radius: 4px;
-    padding: 6px 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.raven-url-item:hover {
-    background: rgba(25, 118, 210, 0.2);
-    border-color: rgba(25, 118, 210, 0.5);
-}
-
-.raven-url-item__bullet {
-    width: 6px;
-    height: 6px;
-    background: #4fc3f7;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.raven-url-item__text-container {
-    flex: 1;
-    overflow: hidden;
-}
-
-.raven-url-item__title {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-bottom: 2px;
-    transition: white-space 0.2s ease;
-}
-
-.raven-url-item:hover .raven-url-item__title {
-    white-space: normal;
-}
-
-.raven-url-item__url {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
-    font-size: 9px;
-    color: rgba(255, 255, 255, 0.5);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    transition: white-space 0.2s ease;
-}
-
-.raven-url-item:hover .raven-url-item__url {
-    white-space: normal;
-}
-
-.raven-url-item__url--single {
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-/* Session Item */
-.raven-session-item {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    padding: 8px 10px;
-    margin-bottom: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.raven-session-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-.raven-session-item__title {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 4px;
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    transition: white-space 0.2s ease;
-}
-
-.raven-session-item:hover .raven-session-item__title {
-    white-space: normal;
-}
-
-.raven-session-item__description {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    transition: white-space 0.2s ease;
-}
-
-.raven-session-item:hover .raven-session-item__description {
-    white-space: normal;
-}
-
-/* Custom Scrollbar */
-.raven-scroll::-webkit-scrollbar {
-    width: 6px;
-}
-
-.raven-scroll::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 3px;
-}
-
-.raven-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
-}
-
-.raven-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Modal Styles */
 .raven-modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .raven-modal-box {
-    background: #fff;
-    padding: 20px;
-    width: 320px;
-    border-radius: 8px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background: #fff;
+  padding: 20px;
+  width: 320px;
+  border-radius: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .raven-modal__title {
-    margin-top: 0;
-    margin-bottom: 16px;
-    font-size: 18px;
-    font-weight: 600;
-    color: #1a1a1a;
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
 }
 
 .raven-modal__input {
-    width: 100%;
-    margin-bottom: 10px;
-    padding: 8px 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    font-family: inherit;
-    box-sizing: border-box;
-    transition: border-color 0.2s ease;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
 }
 
 .raven-modal__input:focus {
-    outline: none;
-    border-color: #0077ff;
+  outline: none;
+  border-color: #0077ff;
 }
 
 .raven-modal__textarea {
-    width: 100%;
-    height: 80px;
-    margin-bottom: 10px;
-    padding: 8px 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    font-family: inherit;
-    resize: vertical;
-    box-sizing: border-box;
-    transition: border-color 0.2s ease;
+  width: 100%;
+  height: 80px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
 }
 
 .raven-modal__textarea:focus {
-    outline: none;
-    border-color: #0077ff;
+  outline: none;
+  border-color: #0077ff;
 }
 
 .raven-modal__actions {
-    text-align: right;
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
+  text-align: right;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .raven-modal__button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .raven-modal__button--cancel {
-    background: #f5f5f5;
-    color: #666;
+  background: #f5f5f5;
+  color: #666;
 }
 
 .raven-modal__button--cancel:hover {
-    background: #e0e0e0;
-    color: #333;
+  background: #e0e0e0;
+  color: #333;
 }
 
 .raven-modal__button--save {
-    background: linear-gradient(135deg, #0077ff 0%, #0055cc 100%);
-    color: white;
+  background: linear-gradient(135deg, #0077ff 0%, #0055cc 100%);
+  color: white;
 }
 
 .raven-modal__button--save:hover {
-    background: linear-gradient(135deg, #0088ff 0%, #0066dd 100%);
-    box-shadow: 0 2px 8px rgba(0, 119, 255, 0.3);
+  background: linear-gradient(135deg, #0088ff 0%, #0066dd 100%);
+  box-shadow: 0 2px 8px rgba(0, 119, 255, 0.3);
 }
