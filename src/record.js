@@ -1,12 +1,13 @@
-import { rLocalStrg, rModes, rStates } from "./constants.js";
+import {  rStates } from "./constants.js";
+import { isManual, isRecording, isReplaying, removeSession, setRavenState } from "./settings.js";
 
 (function () {
-    if (window.RAVEN.Mode == rModes.MANUAL) {
+    if (isManual()) {
         window.addEventListener('keydown', function (e) {
             // Ctrl + Shift + R => Record
             if (e.ctrlKey && e.shiftKey && e.key === 'R') {
                 e.preventDefault();
-                if (window.RAVEN.isRecordMode) {
+                if (isRecording()) {
                     snapshot()
                 } else {
                     record()
@@ -15,11 +16,11 @@ import { rLocalStrg, rModes, rStates } from "./constants.js";
             // Ctrl + Shift + D => Demo
             if (e.ctrlKey && e.shiftKey && e.key === 'D') {
                 e.preventDefault();
-                if (window.RAVEN.isReplayMode) {
-                    localStorage.removeItem(rLocalStrg.EXAMPLE)
-                    localStorage.setItem(rLocalStrg.STATE, rStates.PASSIVE)
+                if (isReplaying()) {
+                    removeSession();
+                    setRavenState(rStates.PASSIVE)
                 } else {
-                    localStorage.setItem(rLocalStrg.STATE, rStates.REPLAY)
+                    setRavenState(rStates.REPLAY)
                 }
                 window.location.reload()
             }
@@ -31,14 +32,13 @@ import { rLocalStrg, rModes, rStates } from "./constants.js";
             snapshot();
         })
         const record = () => {
-            localStorage.removeItem(rLocalStrg.EXAMPLE)
-            localStorage.setItem(rLocalStrg.STATE, rStates.RECORD)
+            removeSession()
+            setRavenState(rStates.RECORD)
             window.location.reload()
         }
 
         const snapshot = () => {
-            localStorage.setItem(rLocalStrg.STATE, rStates.PASSIVE)
-            window.RAVEN.isRecordMode = false
+            setRavenState(rStates.PASSIVE)
             CacheModal.open(({ title, description }) => {
                 window.dispatchEvent(
                     new CustomEvent('snapshot', {

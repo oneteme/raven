@@ -1,4 +1,5 @@
-import { debugRaven } from "./settings";
+import { getRequestbyRouteRequest, getRouteBySessionUrl, insertSession } from "./raven-dao";
+import { getSession, isRecording, isReplaying, ravenLog, ravenParams, ravenWarn } from "./settings";
 (function () {
     let recordCache = {};
 
@@ -10,23 +11,23 @@ import { debugRaven } from "./settings";
     // window.fetch = async function (input, init) {
     //     try {
     //         const loadEnabled = localStorage.getItem('loadData') === 'enabled';
-    //         console.log("FETCH -> INTERCEPTOR")
+    //         ravenLog("FETCH -> INTERCEPTOR")
     //         if (!loadEnabled || !cache) {
-    //             console.log("FETCH -> DIDNT WORK CACHE IS NULL OR LOAD NOT ENABLED")
+    //             ravenLog("FETCH -> DIDNT WORK CACHE IS NULL OR LOAD NOT ENABLED")
     //             return originalFetch(input, init);
     //         }
 
     //         const method = (init?.method || 'GET').toUpperCase();
     //         if (method !== 'GET') {
-    //             console.log("FETCH -> method not GET")
+    //             ravenLog("FETCH -> method not GET")
     //             return originalFetch(input, init);
     //         }
 
     //         const url = typeof input === 'string' ? input : input.url;
     //         const key = encodeURIComponent(url);
-    //         console.log("FETCH ->  key is :", key)
+    //         ravenLog("FETCH ->  key is :", key)
     //         if (cache[key] !== undefined) {
-    //             console.log('🟢 FETCH CACHE HIT →', url);
+    //             ravenLog('🟢 FETCH CACHE HIT →', url);
     //             return new Response(JSON.stringify(cache[key]), {
     //                 status: 200,
     //                 headers: { 'Content-Type': 'application/json' }
@@ -44,10 +45,10 @@ import { debugRaven } from "./settings";
     // XMLHttpRequest INTERCEPTOR 
     // ==================================================
     const OriginalXHR = window.XMLHttpRequest;
-    if (window.RAVEN.isRecordMode) {
+    if (isRecording()) {
         recordCache["navigations"] = {}
         applyXHR(saveXHR, "🔴 new RECORD XHR")
-    } else if (window.RAVEN.isReplayMode) {
+    } else if (isReplaying()) {
         setupXHRData();
     }
     async function setupXHRData() {
@@ -72,32 +73,32 @@ import { debugRaven } from "./settings";
 
     // LOAD INTERCEPTOR
     function loadXHR(xhr) {
-        console.log("loadXHR : ", xhr)
+        ravenLog("loadXHR : ", xhr)
         const originalSend = xhr.send;
         xhr.send = function () {
             if (xhr.__method !== 'GET') {
                 return originalSend.apply(xhr, arguments);
             }
             // xhr.abort();
-            window.QUERIES.getByIndex("route", "by_session_url", window.RAVEN.loadedExample, xhr.__pageUrl)
+            getRouteBySessionUrl(getSession(), xhr.__pageUrl)
                 .then(route => {
                     if (!route) {
-                        console.warn("route not found -> ", xhr.__pageUrl)
+                        ravenWarn("route not found -> ", xhr.__pageUrl)
                         fakeEmptyResponse(xhr)
                         return;
                     }
-                    console.log("routeId : ", route.id)
-                    window.QUERIES.getByIndex("request", "by_route_request", route.id, encodeURIComponent(xhr.__url))
+                    ravenLog("[interceptor]", "routeId : ", route.id)
+                    getRequestbyRouteRequest(route.id, encodeURIComponent(xhr.__url))
                         .then(request => {
                             if (!request) {
-                                console.warn("🔴 could not find request for url : ", xhr.__url, "page url : ", xhr.__pageUrl, " route id : ", route.id)
+                                ravenWarn("🔴 could not find request for url : ", xhr.__url, "page url : ", xhr.__pageUrl, " route id : ", route.id)
                                 fakeEmptyResponse(xhr)
                                 return;
                             }
-                            debugRaven("FOUND REQUEST : ", request)
+                            ravenWarn("FOUND REQUEST : ", request)
                             const fakeXHR = request.xhr,
                                 fakeResponse = JSON.stringify(fakeXHR.response)
-                            // console.log("FOUND RESPONSE : ", fakeXHR)
+                            // ravenLog("FOUND RESPONSE : ", fakeXHR)
                             Object.defineProperties(xhr, {
                                 readyState: { get: () => fakeXHR.readyState },
                                 status: { get: () => fakeXHR.status },
@@ -152,8 +153,8 @@ import { debugRaven } from "./settings";
     addEventListener("snapshot", (e) => {
         recordCache["title"] = e.detail.title;
         recordCache["description"] = e.detail.description;
-        window.QUERIES.insertSession(recordCache).then(session => {
-            console.log("session inserted : ", session)
+        insertSession(recordCache).then(session => {
+            ravenLog("session inserted : ", session)
             window.location.reload()
         })
     });

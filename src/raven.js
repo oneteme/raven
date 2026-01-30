@@ -1,22 +1,17 @@
 import "./settings.js";
-import "./cache-db.js";
+import { getRouteBySession, getAllSessions, insertSession, exportSession } from "./raven-dao.js";
 import "./raven-interceptor.js";
 import "./record.js";
 import "./modal.js";
-import { rLocalStrg, rModes, rStates } from "./constants.js";
-import { debugRaven } from "./settings.js";
+import { rModes, rStates } from "./constants.js";
+import { getMode, getState, isAuto, isEnabled, isManual, isRecording, ravenLog, ravenParams, setRavenSession } from "./settings.js";
 
 let
   panelHoverTimeOut,
   panelHideTimer = 600,
   showExamples = false,
-  exCount = 0,
   navigationInterval,
   pages = new Set();
-
-if (window.RAVEN.isRecordMode) {
-  detectNavigation()
-}
 
 // CREATE WIDGETS 
 const container = document.createElement('div');
@@ -136,11 +131,11 @@ function createRecordButton(recordIcon) {
 
   // Recording functionality
   button.addEventListener('click', () => {
-    if (!window.RAVEN.isRecordMode) {
-      dispatchEvent(new CustomEvent("recording:start"))
-    } else {
+    if (isRecording()) {
       dispatchEvent(new CustomEvent("recording:stop"))
       stopRecording();
+    } else {
+      dispatchEvent(new CustomEvent("recording:start"))
     }
   });
 
@@ -164,8 +159,8 @@ function createDownloadButton() {
 
   // Download functionality
   button.addEventListener('click', () => {
-    console.log('Download clicked');
-    window.QUERIES.list("session").then(sessions => {
+    ravenLog('Download clicked');
+    getAllSessions().then(sessions => {
       exportSessions(sessions)
     })
   });
@@ -249,25 +244,25 @@ function setPageCount(count) {
 // SESSIONS FUNCITONS
 function exportSessions(sessions, index = 0, indexJson = { "dir": "", "files": [] }) {
   const session = sessions[index]
-  window.QUERIES.exportSession(session).then(exportedJson => {
+  exportSession(session).then(exportedJson => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-'),
       jsonName = exportedJson.title.replaceAll(" ", "_") + "_" + timestamp + ".json";
     downloadJson(exportedJson, jsonName)
     indexJson.files.push(jsonName)
-    console.log("export session index : ", index)
+    ravenLog("export session index : ", index)
     if (++index < sessions.length) {
       exportSessions(sessions, index, indexJson)
     } else {
-      console.log("indexJson : ", indexJson)
+      ravenLog("indexJson : ", indexJson)
       downloadJson(indexJson, "index.json")
     }
   })
 }
 function assembleSessions() {
   loadSessions().then(() => {
-    window.QUERIES.list("session").then(sessions => {
+    getAllSessions().then(sessions => {
       const sessionsDiv = sessions.map(createSession)
-      console.log("sessions : ", sessions)
+      ravenLog("sessions : ", sessions)
       // examplesContainer.appendChild(sessions);
     })
   })
@@ -290,16 +285,15 @@ function createSession(session) {
   item.appendChild(descEl);
 
   item.addEventListener('click', () => {
-    QUERIES.getByIndex("route", "by_session", session.id).then(sessionRoute => {
+    getRouteBySession(session.id).then(sessionRoute => {
       if (sessionRoute) {
-        localStorage.setItem(rLocalStrg.EXAMPLE, session.id)
-        localStorage.setItem(rLocalStrg.STATE, rStates.REPLAY)
-        window.RAVEN.loadedExample = session.id
-        window.RAVEN.state = rStates.REPLAY
+        setRavenSession(session.id)
         setTimeout(() => {
           window.location.href = sessionRoute.route;
           window.location.reload()
         }, 200);
+      } else {
+        ravenLog("route not found")
       }
     })
   });
@@ -309,15 +303,15 @@ function createSession(session) {
 
 function loadSessions() {
   return new Promise(resolve => {
-    if (window.RAVEN.Mode == rModes.MANUAL) {
+    if (isManual()) {
       resolve();
-    } else if (window.RAVEN.Mode == rModes.AUTO && window.RAVEN.loadedFiles != null)
-      window.QUERIES.list("session").then(sessions => {
-        console.log("sessions : ", sessions)
+    } else if (isAuto() && ravenParams.loadedFiles != null)
+      getAllSessions().then(sessions => {
+        ravenLog("sessions : ", sessions)
         if (sessions.length <= 0) {
-          console.log("files exist and Raven is on AUTO Mode")
-          fetch(window.RAVEN.loadedFiles).then((response) => response.json()).then(jsonIndex => {
-            console.log("index files : ", jsonIndex);
+          ravenLog("files exist and Raven is on AUTO Mode")
+          fetch(ravenParams.loadedFiles).then((response) => response.json()).then(jsonIndex => {
+            ravenLog("index files : ", jsonIndex);
             loadFile(jsonIndex.files, 0, jsonIndex.dir ?? "", resolve);
           })
         } else {
@@ -328,11 +322,11 @@ function loadSessions() {
 }
 
 function loadFile(files, index, dir, resolve) {
-  console.log("loaded path : ", dir + "/" + files[index])
+  ravenLog("loaded path : ", dir + "/" + files[index])
   fetch(dir + "/" + files[index]).then(response => response.json()).then(json => {
-    console.log("json : ", json)
-    window.QUERIES.insertSession(json).then(session => {
-      console.log("all requests and routes for session : ", session, " have been inserted successfully")
+    ravenLog("json : ", json)
+    insertSession(json).then(session => {
+      ravenLog("all requests and routes for session : ", session, " have been inserted successfully")
       if (++index < files.length) {
         loadFile(files, index, dir, resolve)
       }
@@ -347,12 +341,12 @@ function loadFile(files, index, dir, resolve) {
 function assembleDOM() {
   panel.appendChild(modeHeader);
   panel.appendChild(logo);
-  if (window.RAVEN.Mode == rModes.MANUAL && !window.RAVEN.isRecordMode) {
-    console.log("Export button")
+  if (isManual() && !isRecording()) {
+    ravenLog("Export button")
     panel.appendChild(downloadButton);
   }
-  setMode(window.RAVEN.Mode)
-  setState(window.RAVEN.state)
+  setMode(getMode())
+  setState(getState())
   panel.appendChild(examplesContainer);
   panel.appendChild(recordedUrlsContainer);
   container.appendChild(panel);
@@ -370,7 +364,7 @@ function createEvents() {
 
 // HELPER RAVEN FUNCTIONS
 function setMode(mode) {
-  console.log("setting RAVEN MODE : ", mode)
+  ravenLog("setting RAVEN MODE : ", mode)
   // Update mode header
   modeHeader.className = `raven-mode-header raven-mode-header--${mode}`;
   modeHeader.textContent = mode === rModes.MANUAL ? 'Manual Mode' : 'Auto Mode';
@@ -381,7 +375,7 @@ function setMode(mode) {
 }
 
 function setState(state) {
-  console.log("setting RAVEN STATE : ", state)
+  ravenLog("setting RAVEN STATE : ", state)
   // Update indicator
   indicator.className = `raven-indicator raven-indicator--${state}`;
 
@@ -410,6 +404,7 @@ function setState(state) {
 }
 
 function startRecording() {
+  detectNavigation();
   recordIcon.classList.add('raven-record-icon--recording');
   button.classList.add('raven-record-button--recording');
   recordedUrlsContainer.classList.add('raven-recorded-urls--visible');
@@ -452,7 +447,7 @@ function stopNavigationDetection() {
   clearInterval(navigationInterval);
 }
 
-if (window.RAVEN.isEnabled) {
+if (isEnabled()) {
   assembleSessions();
   assembleDOM();
   createEvents();

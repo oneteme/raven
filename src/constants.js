@@ -9,7 +9,7 @@ export const rStates = {
     PASSIVE: "passive"
 }
 export const rLocalStrg = {
-    MODE: "mode",
-    EXAMPLE: "loadedExample",
-    STATE: "state"
+    MODE: "jarvis.raven.mode",
+    SESSION: "jarvis.raven.session",
+    STATE: "jarvis.raven.state"
 }
