@@ -1,4 +1,4 @@
-import { QUERIES, openDB, createDB } from "./raven-dao"
+import { createDB, openDB, QUERIES } from "./idx-db-utils";
 import { ravenLog, ravenWarn } from "./settings";
 
 const SCHEMAS = {

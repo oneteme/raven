@@ -9,17 +9,18 @@ export let ravenParams = {
     isRecordMode: false,
     isEnabled: true,
     loadedFiles: null,
-    debugMode: false
+    debugMode: true
 }
 
 export function RAVEN() {
+    ravenLog("setting paramters")
     setRavenState(getLocalValue(rLocalStrg.STATE));
     setRavenSession(getLocalValue(rLocalStrg.SESSION));
     setRavenMode(checkMode(window.rMode) ? window.rMode : getLocalValue(rLocalStrg.MODE));
     ravenParams.isRecordMode = isRecording();
     ravenParams.isReplayMode = isReplaying();
     ravenParams.loadedFiles = window.rLoad;
-    ravenParams.debugMode = window.rDebug ?? false;
+    setDebugMode(true);
     ravenLog("New RAVEN params : ", ravenParams);
 }
 RAVEN();
@@ -107,6 +108,7 @@ export function getSession() {
 // SETTING PARAMETERS VALUES
 
 export function setRavenState(state) {
+    ravenLog("RAVEN SET STATE TO : ", state)
     state = checkParamValue(state, rStates) ? state : rStates.PASSIVE;
     setLocalValue(rLocalStrg.STATE, state)
     ravenParams.state = state
@@ -152,11 +154,11 @@ function setDebugMode(mode) {
 // LOCAL STORAGE SETTINGS
 
 function setLocalValue(k, v) {
-    localStorage.setItem(k, v)
+    sessionStorage.setItem(k, v);
 }
 function getLocalValue(k) {
-    localStorage.getItem(k)
+    return sessionStorage.getItem(k)
 }
 function removeLocalValue(k) {
-    localStorage.removeItem(k)
+    sessionStorage.removeItem(k)
 }
