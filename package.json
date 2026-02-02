@@ -1,6 +1,6 @@
 {
   "name": "@oneteme/raven",
-  "version": "1.0.1-beta",
+  "version": "1.0.2-beta",
   "description": "Request Archive for Virtual Endpoint Navigation",
   "private": false,
   "homepage": "https://github.com/oneteme/raven#readme",
