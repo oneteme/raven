@@ -20,7 +20,7 @@ export function RAVEN() {
     ravenParams.isRecordMode = isRecording();
     ravenParams.isReplayMode = isReplaying();
     ravenParams.loadedFiles = window.rLoad;
-    setDebugMode(true);
+    setDebugMode(window.rDebug);
     ravenLog("New RAVEN params : ", ravenParams);
 }
 RAVEN();
