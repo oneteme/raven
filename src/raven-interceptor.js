@@ -1,5 +1,6 @@
 import { getRequestbyRouteRequest, getRouteBySessionUrl, insertSession } from "./raven-dao";
-import { getSession, isRecording, isReplaying, ravenLog, ravenParams, ravenWarn } from "./settings";
+import { downloadJson, generateJsonName } from "./raven-utils";
+import { getSession, isRecording, isReplaying, ravenError, ravenLog, ravenParams, ravenWarn } from "./settings";
 (function () {
     let recordCache = {};
 
@@ -82,20 +83,9 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenParams, ravenWarn 
             // xhr.abort();
             getRouteBySessionUrl(getSession(), xhr.__pageUrl)
                 .then(route => {
-                    if (!route) {
-                        ravenWarn("route not found -> ", xhr.__pageUrl)
-                        fakeEmptyResponse(xhr)
-                        return;
-                    }
-                    ravenLog("[interceptor]", "routeId : ", route.id)
                     getRequestbyRouteRequest(route.id, encodeURIComponent(xhr.__url))
                         .then(request => {
-                            if (!request) {
-                                ravenWarn("🔴 could not find request for url : ", xhr.__url, "page url : ", xhr.__pageUrl, " route id : ", route.id)
-                                fakeEmptyResponse(xhr)
-                                return;
-                            }
-                            ravenWarn("FOUND REQUEST : ", request)
+                            ravenLog("[RAVEN INTERCEPTOR]","FOUND REQUEST : ", request)
                             const fakeXHR = request.xhr,
                                 fakeResponse = JSON.stringify(fakeXHR.response)
                             // ravenLog("FOUND RESPONSE : ", fakeXHR)
@@ -107,7 +97,15 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenParams, ravenWarn 
                             });
                             fireXHR(xhr)
                             return;
+                        }).catch(err => {
+                            ravenWarn(err)
+                            fakeEmptyResponse(xhr)
+                            return;
                         })
+                }).catch(err => {
+                    ravenWarn(err)
+                    fakeEmptyResponse(xhr)
+                    return;
                 });
         };
         return xhr;
@@ -153,8 +151,12 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenParams, ravenWarn 
     addEventListener("snapshot", (e) => {
         recordCache["title"] = e.detail.title;
         recordCache["description"] = e.detail.description;
-        insertSession(recordCache).then(session => {
+        recordCache["category"] = e.detail.category
+        insertSession(recordCache, e.detail.categoryId).then(session => {
             ravenLog("session inserted : ", session)
+            if (e.detail.download) {
+                downloadJson(recordCache, generateJsonName(recordCache["title"]))
+            }
             window.location.reload()
         })
     });

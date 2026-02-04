@@ -474,7 +474,7 @@
 .raven-modal-box {
   background: #fff;
   padding: 20px;
-  width: 320px;
+  width: 360px;
   border-radius: 8px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -524,11 +524,170 @@
   border-color: #0077ff;
 }
 
+.raven-modal__checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.raven-modal__checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.raven-modal__checkbox-label {
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+}
+
+.raven-modal__section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 8px;
+  margin-top: 4px;
+}
+
+.raven-modal__category-container {
+  margin-bottom: 12px;
+}
+
+.raven-modal__category-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.raven-modal__select {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.raven-modal__select:focus {
+  outline: none;
+  border-color: #0077ff;
+}
+
+.raven-modal__category-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.raven-modal__category-input:focus {
+  outline: none;
+  border-color: #0077ff;
+}
+
+.raven-modal__category-input--error {
+  border-color: #f44336;
+  background-color: #ffebee;
+  color: #f44336;
+}
+
+.raven-modal__category-input--error:focus {
+  border-color: #d32f2f;
+}
+
+.raven-modal__category-error {
+  width: 100%;
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 4px;
+  display: none;
+  text-align: left;
+}
+
+.raven-modal__category-error--visible {
+  display: block;
+}
+
+.raven-modal__category-toggle-btn {
+  padding: 8px 12px;
+  border: 1px solid #0077ff;
+  background: white;
+  color: #0077ff;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.raven-modal__category-toggle-btn:hover {
+  background: #0077ff;
+  color: white;
+}
+
+.raven-modal__category-validate-btn {
+  padding: 8px 12px;
+  min-width: 36px;
+  border: 1px solid #4caf50;
+  background: white;
+  color: #4caf50;
+  border-radius: 4px;
+  font-size: 16px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.raven-modal__category-validate-btn:hover {
+  background: #4caf50;
+  color: white;
+}
+
+.raven-modal__category-back-btn {
+  width: 100%;
+  padding: 4px 0;
+  margin-top: 4px;
+  border: none;
+  background: transparent;
+  color: #999;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.raven-modal__category-back-btn:hover {
+  color: #0077ff;
+}
+
 .raven-modal__actions {
   text-align: right;
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  margin-top: 16px;
 }
 
 .raven-modal__button {

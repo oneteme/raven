@@ -42,12 +42,18 @@ export function openDB(name = DB_NAME, version = VERSION) {
 
 // Open DB HELPER function
 function getByIndexHelperFn(storeName, indexName, fn) {
-    return openDB().then(db => {
-        const tx = db.transaction([storeName], "readonly");
-        const index = tx.objectStore(storeName).index(indexName);
-        return new Promise((res, rej) => {
+    return new Promise((res, rej) => {
+        openDB().then(db => {
+            const tx = db.transaction([storeName], "readonly");
+            const index = tx.objectStore(storeName).index(indexName);
             const req = fn(index);
-            req.onsuccess = evn => res(evn.target.result)
+            req.onsuccess = evn => {
+                if (evn.target.result) {
+                    res(evn.target.result)
+                } else {
+                    rej("[RAVEN indexedDB] could not find " + storeName + " " + indexName)
+                }
+            }
             req.onerror = err => rej(err);
         });
     })

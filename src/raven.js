@@ -1,10 +1,11 @@
 import "./settings.js";
-import { getRouteBySession, getAllSessions, insertSession, exportSession } from "./raven-dao.js";
+import { getRouteBySessionId, getAllSessions, insertSession, exportSession } from "./raven-dao.js";
 import "./raven-interceptor.js";
 import "./record.js";
 import "./modal.js";
 import { rModes, rStates } from "./constants.js";
-import { getMode, getState, isAuto, isEnabled, isManual, isRecording, ravenLog, ravenParams, setRavenSession } from "./settings.js";
+import { getImportedFiles, getMode, getState, isAuto, isEnabled, isManual, isRecording, ravenLog, setRavenSession } from "./settings.js";
+import { generateJsonName } from "./raven-utils.js";
 
 let
   panelHoverTimeOut,
@@ -245,8 +246,7 @@ function setPageCount(count) {
 function exportSessions(sessions, index = 0, indexJson = { "dir": "", "files": [] }) {
   const session = sessions[index]
   exportSession(session).then(exportedJson => {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-'),
-      jsonName = exportedJson.title.replaceAll(" ", "_") + "_" + timestamp + ".json";
+    const jsonName = generateJsonName(exportedJson.title);
     downloadJson(exportedJson, jsonName)
     indexJson.files.push(jsonName)
     ravenLog("export session index : ", index)
@@ -285,7 +285,7 @@ function createSession(session) {
   item.appendChild(descEl);
 
   item.addEventListener('click', () => {
-    getRouteBySession(session.id).then(sessionRoute => {
+    getRouteBySessionId(session.id).then(sessionRoute => {
       if (sessionRoute) {
         setRavenSession(session.id)
         setTimeout(() => {
@@ -305,12 +305,12 @@ function loadSessions() {
   return new Promise(resolve => {
     if (isManual()) {
       resolve();
-    } else if (isAuto() && ravenParams.loadedFiles != null)
+    } else if (isAuto() && getImportedFiles() != null)
       getAllSessions().then(sessions => {
         ravenLog("sessions : ", sessions)
         if (sessions.length <= 0) {
           ravenLog("files exist and Raven is on AUTO Mode")
-          fetch(ravenParams.loadedFiles).then((response) => response.json()).then(jsonIndex => {
+          fetch(getImportedFiles()).then((response) => response.json()).then(jsonIndex => {
             ravenLog("index files : ", jsonIndex);
             loadFile(jsonIndex.files, 0, jsonIndex.dir ?? "", resolve);
           })
@@ -431,17 +431,7 @@ function detectNavigation() {
   }, 100);
 }
 
-function downloadJson(json, filename = 'cache.json') {
-  const blob = new Blob(
-    [JSON.stringify(json, null, 2)],
-    { type: 'application/json' }
-  );
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
+
 
 function stopNavigationDetection() {
   clearInterval(navigationInterval);

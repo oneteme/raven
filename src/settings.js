@@ -11,48 +11,19 @@ export let ravenParams = {
     loadedFiles: null,
     debugMode: true
 }
-
+setDebugMode(window.rDebug);
 export function RAVEN() {
     ravenLog("setting paramters")
     setRavenState(getLocalValue(rLocalStrg.STATE));
     setRavenSession(getLocalValue(rLocalStrg.SESSION));
-    setRavenMode(checkMode(window.rMode) ? window.rMode : getLocalValue(rLocalStrg.MODE));
+    setRavenMode(window.rMode ?? getLocalValue(rLocalStrg.MODE));
     ravenParams.isRecordMode = isRecording();
     ravenParams.isReplayMode = isReplaying();
     ravenParams.loadedFiles = window.rLoad;
-    setDebugMode(window.rDebug);
+
     ravenLog("New RAVEN params : ", ravenParams);
 }
 RAVEN();
-// RAVEN({ mode: rModes.AUTO });
-// function RAVEN2() {
-//     ravenLog("test raven link")
-//     const loadedExample = parseInt(getLocalValue(rLocalStrg.EXAMPLE));
-//     let ravenState = rStates.PASSIVE,
-//         rMode = rModes.MANUAL;
-//     if (checkParamValue(getLocalValue(rLocalStrg.MODE), rModes)) {
-//         rMode = getLocalValue(rLocalStrg.MODE);
-//     } else if (checkParamValue(window.rMode, rModes)) {
-//         rMode = window.rMode
-//     }
-//     if (!Number.isNaN(loadedExample) || rMode == rModes.AUTO) {
-//         ravenState = rStates.REPLAY
-//         localStorage.setItem(rLocalStrg.STATE, rStates.REPLAY)
-//     } else if (checkParamValue(getLocalValue(rLocalStrg.STATE), rStates)) {
-//         ravenState = getLocalValue(rLocalStrg.STATE)
-//     }
-//     window.RAVEN = {
-//         Mode: rMode,
-//         isReplayMode: ravenState == rStates.REPLAY,
-//         isRecordMode: rMode == rModes.MANUAL && ravenState == rStates.RECORD,
-//         state: ravenState,
-//         isEnabled: rMode != rModes.DISABLED,
-//         loadedExample: Number.isNaN(loadedExample) ? -1 : loadedExample,
-//         loadedFiles: window.rLoad,
-//         debugMode: true
-//     }
-//     ravenLog("RAVEN  : ", window.RAVEN)
-// };
 // RAVEN DEBUG
 function debugRaven(fn) {
     if (ravenParams.debugMode) {
@@ -104,7 +75,9 @@ export function getState() {
 export function getSession() {
     return ravenParams.loadedExample
 }
-
+export function getImportedFiles() {
+    return ravenParams.loadedFiles
+}
 // SETTING PARAMETERS VALUES
 
 export function setRavenState(state) {

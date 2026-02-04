@@ -1,5 +1,6 @@
-import {  rStates } from "./constants.js";
-import { isManual, isRecording, isReplaying, removeSession, setRavenState } from "./settings.js";
+import { rStates } from "./constants.js";
+import { openModal } from "./modal.js";
+import { isManual, isRecording, isReplaying, ravenLog, removeSession, setRavenState } from "./settings.js";
 
 (function () {
     if (isManual()) {
@@ -39,10 +40,11 @@ import { isManual, isRecording, isReplaying, removeSession, setRavenState } from
 
         const snapshot = () => {
             setRavenState(rStates.PASSIVE)
-            CacheModal.open(({ title, description }) => {
+            openModal((payload) => {
+                ravenLog("submit : ", payload)
                 window.dispatchEvent(
                     new CustomEvent('snapshot', {
-                        detail: { title, description }
+                        detail: payload
                     })
                 );
             });
