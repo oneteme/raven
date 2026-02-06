@@ -112,8 +112,22 @@ export function insertCategory(name) {
         })
     })
 }
+export function insertNonExistantCategory(name) {
+    return new Promise(res => {
+        getCategoryByName(name).then(cat => {
+            res(cat.id)
+        }).catch(() => {
+            insertCategory(name).then(categoryId => {
+                res(categoryId)
+            })
+        })
+    })
+}
 export function getAllCategories() {
     return QUERIES.list(categoryName)
+}
+export function getCategoryById(categoryId) {
+    return QUERIES.getById(categoryName, categoryId);
 }
 export function getCategoryByName(name) {
     ravenLog("category ", name)

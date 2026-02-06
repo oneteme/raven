@@ -1,11 +1,11 @@
 import "./settings.js";
-import { getRouteBySessionId, getAllSessions, insertSession, exportSession } from "./raven-dao.js";
+import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, getCategoryByName } from "./raven-dao.js";
 import "./raven-interceptor.js";
 import "./record.js";
 import "./modal.js";
 import { rModes, rStates } from "./constants.js";
-import { getImportedFiles, getMode, getState, isAuto, isEnabled, isManual, isRecording, ravenLog, setRavenSession } from "./settings.js";
-import { generateJsonName } from "./raven-utils.js";
+import { getImportedFiles, getMode, getState, isAuto, isEnabled, isManual, isRecording, ravenError, ravenLog, setRavenSession } from "./settings.js";
+import { createDownloadButton, createTextButton, displayNextSiblings, downloadJson, generateJsonName } from "./raven-utils.js";
 
 let
   panelHoverTimeOut,
@@ -21,11 +21,9 @@ container.className = 'raven-container';
 const indicator = createIndicator();
 const panel = createPanel();
 const modeHeader = createModeHeader();
-const logo = createLogo();
 const toggleButton = createToggleButton();
 const recordIcon = createRecordIcon();
 const button = createRecordButton(recordIcon);
-const downloadButton = createDownloadButton();
 const examplesContainer = createExamplesContainer();
 const urlsList = createRecordUrlsList();
 const recordedUrlsContainer = createRecordUrls();
@@ -35,11 +33,41 @@ function createIndicator() {
   const indicator = document.createElement('div');
   indicator.className = 'raven-indicator raven-indicator--passive';
 
-  const icon = document.createElement('div');
-  icon.className = 'raven-indicator__icon';
-  icon.innerHTML = 'RAVEN';
+  const content = document.createElement('div');
+  content.className = 'raven-indicator__content';
 
-  indicator.appendChild(icon);
+  const dot = document.createElement('div');
+  dot.className = 'raven-indicator__dot';
+
+  const bigLetter = document.createElement('div');
+  bigLetter.className = 'raven-indicator__big-letter';
+  bigLetter.textContent = 'R';
+
+  const textStack = document.createElement('div');
+  textStack.className = 'raven-indicator__text-stack';
+
+  const topText = document.createElement('div');
+  topText.className = 'raven-indicator__top-text';
+  topText.textContent = 'RAVEN';
+
+  const bottomText = document.createElement('div');
+  bottomText.className = 'raven-indicator__bottom-text';
+  bottomText.textContent = 'AVEN';
+
+  textStack.appendChild(topText);
+  textStack.appendChild(bottomText);
+
+  content.appendChild(dot);
+  content.appendChild(bigLetter);
+  content.appendChild(textStack);
+
+  indicator.appendChild(content);
+  indicator.addEventListener('mouseenter', () => {
+    panel.classList.add('raven-panel--visible');
+    panel.classList.remove('raven-panel--hidden');
+    indicator.style.opacity = '0';
+  });
+
   return indicator;
 }
 function createModeHeader() {
@@ -47,29 +75,6 @@ function createModeHeader() {
   header.className = 'raven-mode-header raven-mode-header--manual';
   header.textContent = 'Manual Mode';
   return header;
-}
-
-function createLogo() {
-  const logoContainer = document.createElement('div');
-  logoContainer.className = 'raven-logo raven-logo--passive';
-
-  const centerLetter = document.createElement('div');
-  centerLetter.className = 'raven-logo__center';
-  centerLetter.textContent = 'R';
-
-  const topText = document.createElement('div');
-  topText.className = 'raven-logo__top';
-  topText.textContent = 'RAVEN';
-
-  const bottomText = document.createElement('div');
-  bottomText.className = 'raven-logo__bottom';
-  bottomText.textContent = 'AVEN';
-
-  logoContainer.appendChild(centerLetter);
-  logoContainer.appendChild(topText);
-  logoContainer.appendChild(bottomText);
-
-  return logoContainer;
 }
 
 function createPanel() {
@@ -86,13 +91,13 @@ function createPanel() {
   });
 
   // Hide panel when leaving both indicator and panel
-  panel.addEventListener('mouseleave', () => {
-    panelHoverTimeOut = setTimeout(() => {
-      panel.classList.remove('raven-panel--visible');
-      panel.classList.add('raven-panel--hidden');
-      indicator.style.opacity = '1';
-    }, panelHideTimer);
-  });
+  // panel.addEventListener('mouseleave', () => {
+  //   panelHoverTimeOut = setTimeout(() => {
+  //     panel.classList.remove('raven-panel--visible');
+  //     panel.classList.add('raven-panel--hidden');
+  //     indicator.style.opacity = '1';
+  //   }, panelHideTimer);
+  // });
 
   return panel;
 }
@@ -143,34 +148,22 @@ function createRecordButton(recordIcon) {
   return button;
 }
 
-function createDownloadButton() {
-  const button = document.createElement('div');
-  button.className = 'raven-download-button';
 
-  // Create SVG download icon
-  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  icon.setAttribute('class', 'raven-download-button__icon');
-  icon.setAttribute('viewBox', '0 0 24 24');
-
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('d', 'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z');
-
-  icon.appendChild(path);
-  button.appendChild(icon);
-
-  // Download functionality
-  button.addEventListener('click', () => {
-    ravenLog('Download clicked');
-    getAllSessions().then(sessions => {
-      exportSessions(sessions)
-    })
-  });
-
-  return button;
-}
 function createExamplesContainer() {
   const examplesContainer = document.createElement('div');
   examplesContainer.className = 'raven-examples-container raven-scroll';
+
+  if (isManual()) {
+    // Create download all section
+    const examplesOptions = document.createElement('div'),
+      downloadAllBtn = createTextButton('raven-button raven-download-all-content', 'Download All', 'raven-button-text', () => { getAllSessions().then(sessions => exportSessions(sessions)) }),
+      importBtn = createTextButton('raven-button raven-import', '+ Import', 'raven-button-text');
+
+    examplesOptions.className = 'raven-example-options-section';
+    examplesOptions.appendChild(downloadAllBtn)
+    examplesOptions.appendChild(importBtn)
+    examplesContainer.appendChild(examplesOptions);
+  }
   return examplesContainer;
 }
 
@@ -258,10 +251,11 @@ function exportSessions(sessions, index = 0, indexJson = { "dir": "", "files": [
     }
   })
 }
+
 function assembleSessions() {
   loadSessions().then(() => {
     getAllSessions().then(sessions => {
-      const sessionsDiv = sessions.map(createSession)
+      sessions.map(createSession)
       ravenLog("sessions : ", sessions)
       // examplesContainer.appendChild(sessions);
     })
@@ -280,10 +274,17 @@ function createSession(session) {
   const descEl = document.createElement('div');
   descEl.className = 'raven-session-item__description';
   descEl.textContent = session.description;
-
+  // Create download button
+  const downloadBtn = createDownloadButton('raven-session-item__download-btn', (e) => {
+    e.stopPropagation();
+    exportSession(session).then(exportedJson => {
+      const jsonName = generateJsonName(exportedJson.title);
+      downloadJson(exportedJson, jsonName)
+    })
+  });
   item.appendChild(titleEl);
   item.appendChild(descEl);
-
+  item.appendChild(downloadBtn);
   item.addEventListener('click', () => {
     getRouteBySessionId(session.id).then(sessionRoute => {
       if (sessionRoute) {
@@ -297,10 +298,62 @@ function createSession(session) {
       }
     })
   });
-  examplesContainer.append(item)
+  getCategoryById(session.category).then(category => {
+    item.style.display = "none"
+    setupSessionCategory(category.name).then(categoryDiv => categoryDiv.appendChild(item));
+    ravenLog("found CATEGORY in SESSION", category)
+  }).catch(err => {
+    examplesContainer.append(item)
+  });
   return item
 }
+function setupSessionCategory(categoryName) {
+  return new Promise(res => {
+    let div = document.querySelector(`[category="${categoryName}"]`);
+    if (!div) {
+      div = createCategoryAccordion(categoryName)
+      res(div)
+    }
+    res(div)
+  })
+}
 
+function createCategoryAccordion(categoryName) {
+  const accordion = document.createElement('div');
+  accordion.className = 'raven-category-accordion';
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'raven-category-header';
+
+  const title = document.createElement('div');
+  title.className = 'raven-category-header__title';
+  title.textContent = categoryName;
+
+  const icon = document.createElement('span');
+  icon.className = 'raven-category-header__icon';
+  icon.textContent = '▶';
+
+  header.appendChild(title);
+  header.appendChild(icon);
+
+
+  // Toggle accordion
+  header.addEventListener('click', () => {
+    const isExpanded = header.classList.contains('raven-category-header--expanded');
+    if (isExpanded) {
+      header.classList.remove('raven-category-header--expanded');
+      displayNextSiblings(header, "none")
+    } else {
+      header.classList.add('raven-category-header--expanded');
+      displayNextSiblings(header, "block")
+    }
+  });
+  accordion.setAttribute("category", categoryName);
+  accordion.appendChild(header);
+  examplesContainer.appendChild(accordion)
+  return accordion;
+}
 function loadSessions() {
   return new Promise(resolve => {
     if (isManual()) {
@@ -340,26 +393,12 @@ function loadFile(files, index, dir, resolve) {
 // ASSEMBLE RAVEN
 function assembleDOM() {
   panel.appendChild(modeHeader);
-  panel.appendChild(logo);
-  if (isManual() && !isRecording()) {
-    ravenLog("Export button")
-    panel.appendChild(downloadButton);
-  }
   setMode(getMode())
   setState(getState())
   panel.appendChild(examplesContainer);
   panel.appendChild(recordedUrlsContainer);
   container.appendChild(panel);
   container.appendChild(indicator);
-}
-
-function createEvents() {
-  // Hover behavior
-  indicator.addEventListener('mouseenter', () => {
-    panel.classList.add('raven-panel--visible');
-    panel.classList.remove('raven-panel--hidden');
-    indicator.style.opacity = '0';
-  });
 }
 
 // HELPER RAVEN FUNCTIONS
@@ -379,17 +418,14 @@ function setState(state) {
   // Update indicator
   indicator.className = `raven-indicator raven-indicator--${state}`;
 
-  // Update logo
-  logo.className = `raven-logo raven-logo--${state}`;
-
-  // Update logo text based on state
-  const topText = logo.querySelector('.raven-logo__top');
-  const bottomText = logo.querySelector('.raven-logo__bottom');
+  // Update indicator text
+  const topText = indicator.querySelector('.raven-indicator__top-text');
+  const bottomText = indicator.querySelector('.raven-indicator__bottom-text');
 
   if (state === rStates.RECORD) {
     topText.textContent = 'AVEN';
     bottomText.textContent = 'ECORD';
-    panel.appendChild(button);
+    panel.appendChild(button)
     startRecording();
   } else if (state === rStates.REPLAY) {
     topText.textContent = 'AVEN';
@@ -398,7 +434,7 @@ function setState(state) {
   } else {
     topText.textContent = 'RAVEN';
     bottomText.textContent = 'AVEN';
-    panel.appendChild(button);
+    panel.appendChild(button)
     panel.appendChild(toggleButton);
   }
 }
@@ -440,6 +476,5 @@ function stopNavigationDetection() {
 if (isEnabled()) {
   assembleSessions();
   assembleDOM();
-  createEvents();
   document.body.appendChild(container);
 }

@@ -212,6 +212,7 @@ function createEvents() {
   cancelButton.onclick = () => {
     if (confirm('Are you sure to discard your save?')) {
       closeModal();
+      window.location.reload();
     }
   };
 
