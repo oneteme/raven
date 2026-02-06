@@ -91,13 +91,13 @@ function createPanel() {
   });
 
   // Hide panel when leaving both indicator and panel
-  // panel.addEventListener('mouseleave', () => {
-  //   panelHoverTimeOut = setTimeout(() => {
-  //     panel.classList.remove('raven-panel--visible');
-  //     panel.classList.add('raven-panel--hidden');
-  //     indicator.style.opacity = '1';
-  //   }, panelHideTimer);
-  // });
+  panel.addEventListener('mouseleave', () => {
+    panelHoverTimeOut = setTimeout(() => {
+      panel.classList.remove('raven-panel--visible');
+      panel.classList.add('raven-panel--hidden');
+      indicator.style.opacity = '1';
+    }, panelHideTimer);
+  });
 
   return panel;
 }
