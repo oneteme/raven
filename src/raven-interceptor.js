@@ -2,7 +2,7 @@ import { getRequestbyRouteRequest, getRouteBySessionUrl, insertSession } from ".
 import { downloadJson, generateJsonName } from "./raven-utils";
 import { getSession, isRecording, isReplaying, ravenError, ravenLog, ravenParams, ravenWarn } from "./settings";
 (function () {
-    let recordCache = {};
+    let navigations = {};
 
     // ==================================================
     // FETCH INTERCEPTOR
@@ -47,7 +47,7 @@ import { getSession, isRecording, isReplaying, ravenError, ravenLog, ravenParams
     // ==================================================
     const OriginalXHR = window.XMLHttpRequest;
     if (isRecording()) {
-        recordCache["navigations"] = {}
+        navigations = {}
         applyXHR(saveXHR, "🔴 new RECORD XHR")
     } else if (isReplaying()) {
         setupXHRData();
@@ -85,7 +85,7 @@ import { getSession, isRecording, isReplaying, ravenError, ravenLog, ravenParams
                 .then(route => {
                     getRequestbyRouteRequest(route.id, encodeURIComponent(xhr.__url))
                         .then(request => {
-                            ravenLog("[RAVEN INTERCEPTOR]","FOUND REQUEST : ", request)
+                            ravenLog("[RAVEN INTERCEPTOR]", "FOUND REQUEST : ", request)
                             const fakeXHR = request.xhr,
                                 fakeResponse = JSON.stringify(fakeXHR.response)
                             // ravenLog("FOUND RESPONSE : ", fakeXHR)
@@ -138,24 +138,27 @@ import { getSession, isRecording, isReplaying, ravenError, ravenLog, ravenParams
             try {
                 if (xhr.__method !== 'GET') return;
                 const key = encodeURIComponent(xhr.__url);
-                recordCache["navigations"][xhr.__pageUrl] ??= {}
-                if (recordCache["navigations"][xhr.__pageUrl][key] != undefined) return;
-                recordCache["navigations"][xhr.__pageUrl][key] = {}
-                recordCache["navigations"][xhr.__pageUrl][key]["response"] = JSON.parse(xhr.responseText);
-                recordCache["navigations"][xhr.__pageUrl][key]["status"] = xhr.status;
-                recordCache["navigations"][xhr.__pageUrl][key]["readyState"] = xhr.readyState;
+                navigations[xhr.__pageUrl] ??= {}
+                if (navigations[xhr.__pageUrl][key] != undefined) return;
+                navigations[xhr.__pageUrl][key] = {}
+                navigations[xhr.__pageUrl][key]["response"] = JSON.parse(xhr.responseText);
+                navigations[xhr.__pageUrl][key]["status"] = xhr.status;
+                navigations[xhr.__pageUrl][key]["readyState"] = xhr.readyState;
             } catch { }
         });
         return xhr;
     }
     addEventListener("snapshot", (e) => {
-        recordCache["title"] = e.detail.title;
-        recordCache["description"] = e.detail.description;
-        recordCache["category"] = e.detail.category
-        insertSession(recordCache, e.detail.categoryId).then(session => {
+        let recordedSession = {
+            "title": e.detail.title,
+            "description": e.detail.description,
+            "category": e.detail.category,
+            "navigations": navigations
+        }
+        insertSession(recordedSession, e.detail.categoryId).then(session => {
             ravenLog("session inserted : ", session)
             if (e.detail.download) {
-                downloadJson(recordCache, generateJsonName(recordCache["title"]))
+                downloadJson(recordedSession, generateJsonName(recordedSession["title"]))
             }
             window.location.reload()
         })

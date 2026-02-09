@@ -61,39 +61,44 @@ export function exportSession(session) {
         exportedData = {
             "title": session.title,
             "description": session.description,
+            "category": null,
             "navigations": navigations
         }
+    ravenLog("exported Session : ", session)
     return new Promise((res, rej) => {
-        openDB().then(db => {
-            const tx = db.transaction([routeName, requestName], "readonly"),
-                routesCursor = tx.objectStore(routeName)
-                    .index('by_session')
-                    .openCursor(IDBKeyRange.only(session.id)),
-                requestindex = tx.objectStore(requestName).index('by_route');
-            routesCursor.onsuccess = (evnRoute) => {
-                const routeCur = evnRoute.target.result;
-                if (routeCur) {
-                    const route = routeCur.value;
-                    navigations[route.route] = {}
-                    let requestsCursor = requestindex.openCursor(IDBKeyRange.only(route.id));
-                    requestsCursor.onsuccess = (evnReq) => {
-                        const reqCur = evnReq.target.result;
-                        if (reqCur) {
-                            const request = reqCur.value;
-                            navigations[route.route][request.url] = request.xhr;
-                            reqCur.continue()
-                        } else {
-                            routeCur.continue();
+        getCategoryNameFromSession(session).then(categoryName => {
+            exportedData["category"] = categoryName
+            openDB().then(db => {
+                const tx = db.transaction([routeName, requestName], "readonly"),
+                    routesCursor = tx.objectStore(routeName)
+                        .index('by_session')
+                        .openCursor(IDBKeyRange.only(session.id)),
+                    requestindex = tx.objectStore(requestName).index('by_route');
+                routesCursor.onsuccess = (evnRoute) => {
+                    const routeCur = evnRoute.target.result;
+                    if (routeCur) {
+                        const route = routeCur.value;
+                        navigations[route.route] = {}
+                        let requestsCursor = requestindex.openCursor(IDBKeyRange.only(route.id));
+                        requestsCursor.onsuccess = (evnReq) => {
+                            const reqCur = evnReq.target.result;
+                            if (reqCur) {
+                                const request = reqCur.value;
+                                navigations[route.route][request.url] = request.xhr;
+                                reqCur.continue()
+                            } else {
+                                routeCur.continue();
+                            }
                         }
+                    } else {
+                        exportedData["navigations"] = navigations
                     }
-                } else {
-                    exportedData["navigations"] = navigations
-                }
-            };
+                };
 
-            //TRANSACTION FINISHED
-            tx.oncomplete = () => res(exportedData);
-            tx.onerror = err => rej(err)
+                //TRANSACTION FINISHED
+                tx.oncomplete = () => res(exportedData);
+                tx.onerror = err => rej(err)
+            })
         })
     })
 }
@@ -114,13 +119,17 @@ export function insertCategory(name) {
 }
 export function insertNonExistantCategory(name) {
     return new Promise(res => {
-        getCategoryByName(name).then(cat => {
-            res(cat.id)
-        }).catch(() => {
-            insertCategory(name).then(categoryId => {
-                res(categoryId)
+        if (name) {
+            getCategoryByName(name).then(cat => {
+                res(cat.id)
+            }).catch(() => {
+                insertCategory(name).then(categoryId => {
+                    res(categoryId)
+                })
             })
-        })
+        } else {
+            res(NaN)
+        }
     })
 }
 export function getAllCategories() {
@@ -132,6 +141,15 @@ export function getCategoryById(categoryId) {
 export function getCategoryByName(name) {
     ravenLog("category ", name)
     return QUERIES.getByIndex(categoryName, 'by_name', name);
+}
+export function getCategoryNameFromSession(session) {
+    return new Promise(res => {
+        getCategoryById(session.category).then(category => {
+            res(category.name)
+        }).catch(err => {
+            res(null)
+        })
+    })
 }
 // -----------------------------
 // ROUTES FUNCTIONS

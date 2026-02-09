@@ -1,5 +1,5 @@
 import "./settings.js";
-import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, getCategoryByName } from "./raven-dao.js";
+import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, getCategoryByName, insertNonExistantCategory } from "./raven-dao.js";
 import "./raven-interceptor.js";
 import "./record.js";
 import "./modal.js";
@@ -255,8 +255,12 @@ function exportSessions(sessions, index = 0, indexJson = { "dir": "", "files": [
 function assembleSessions() {
   loadSessions().then(() => {
     getAllSessions().then(sessions => {
-      sessions.map(createSession)
-      ravenLog("sessions : ", sessions)
+      if (sessions.length > 0) {
+        panel.appendChild(examplesContainer);
+        ravenLog("sessions : ", sessions)
+        sessions.map(createSession)
+      }
+
       // examplesContainer.appendChild(sessions);
     })
   })
@@ -284,7 +288,9 @@ function createSession(session) {
   });
   item.appendChild(titleEl);
   item.appendChild(descEl);
-  item.appendChild(downloadBtn);
+  if (isManual()) {
+    item.appendChild(downloadBtn);
+  }
   item.addEventListener('click', () => {
     getRouteBySessionId(session.id).then(sessionRoute => {
       if (sessionRoute) {
@@ -303,6 +309,7 @@ function createSession(session) {
     setupSessionCategory(category.name).then(categoryDiv => categoryDiv.appendChild(item));
     ravenLog("found CATEGORY in SESSION", category)
   }).catch(err => {
+    ravenLog("NO CATEGORY FOUND")
     examplesContainer.append(item)
   });
   return item
@@ -376,18 +383,31 @@ function loadSessions() {
 
 function loadFile(files, index, dir, resolve) {
   ravenLog("loaded path : ", dir + "/" + files[index])
-  fetch(dir + "/" + files[index]).then(response => response.json()).then(json => {
-    ravenLog("json : ", json)
-    insertSession(json).then(session => {
-      ravenLog("all requests and routes for session : ", session, " have been inserted successfully")
-      if (++index < files.length) {
-        loadFile(files, index, dir, resolve)
-      }
-      else {
-        resolve();
-      }
-    })
+  importFile(dir + "/" + files[index]).then(session => {
+    ravenLog("all requests and routes for session : ", session, " have been inserted successfully")
+    if (++index < files.length) {
+      loadFile(files, index, dir, resolve)
+    }
+    else {
+      resolve();
+    }
+  })
+}
 
+function importFile(path) {
+  return new Promise((res, rej) => {
+    fetch(path).then(response => response.json())
+      .then(json => {
+        ravenLog("json : ", json)
+        insertNonExistantCategory(json.category ?? null).then(cateoryId => {
+          insertSession(json, cateoryId).then(session => {
+            res(session)
+          })
+        })
+      }).catch(err => {
+        console.error("Error reading : ", path, " => ", err)
+        res(err)
+      })
   })
 }
 // ASSEMBLE RAVEN
@@ -395,7 +415,6 @@ function assembleDOM() {
   panel.appendChild(modeHeader);
   setMode(getMode())
   setState(getState())
-  panel.appendChild(examplesContainer);
   panel.appendChild(recordedUrlsContainer);
   container.appendChild(panel);
   container.appendChild(indicator);
@@ -474,7 +493,7 @@ function stopNavigationDetection() {
 }
 
 if (isEnabled()) {
-  assembleSessions();
   assembleDOM();
+  assembleSessions();
   document.body.appendChild(container);
 }
