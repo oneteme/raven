@@ -1,6 +1,6 @@
 import "./settings.js";
 import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, getCategoryByName, insertNonExistantCategory } from "./raven-dao.js";
-import "./raven-interceptor.js";
+// import "./raven-interceptor.js";
 import "./record.js";
 import "./modal.js";
 import { rModes, rStates } from "./constants.js";
@@ -13,6 +13,15 @@ let
   showExamples = false,
   navigationInterval,
   pages = new Set();
+
+
+
+// if ('serviceWorker' in navigator) {
+//   navigator.serviceWorker.register('/raven-sw.js', {
+//     scope: '/'
+//   });
+// }
+
 
 // CREATE WIDGETS 
 const container = document.createElement('div');
