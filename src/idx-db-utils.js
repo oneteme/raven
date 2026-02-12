@@ -1,11 +1,9 @@
-import { ravenLog } from "./settings";
+import { ravenError, ravenLog, ravenWarn } from "./settings";
 
-const DB_NAME = 'raven-db';
-const VERSION = 1;
 // -----------------------------
 // database funcitons 
 // -----------------------------
-export function createDB(schemas, name = DB_NAME, version = VERSION) {
+export function createDB(schemas, name, version) {
     ravenLog("RAVEN CREATE DB => SCHEMAS : ", schemas, " name : ", name, " VERSION : ", version)
     const req = indexedDB.open(name, version);
     req.onupgradeneeded = (event) => {
@@ -28,7 +26,7 @@ export function createDB(schemas, name = DB_NAME, version = VERSION) {
         });
     };
 }
-export function openDB(name = DB_NAME, version = VERSION) {
+export function openDB(name, version) {
     //utils.debugRaven("opening DB... ", name)
     const cnx = indexedDB.open(name, version);
     return new Promise(resolve => {
@@ -41,9 +39,9 @@ export function openDB(name = DB_NAME, version = VERSION) {
 
 
 // Open DB HELPER function
-function getByIndexHelperFn(storeName, indexName, fn) {
+function getByIndexHelperFn(openMethod, storeName, indexName, fn) {
     return new Promise((res, rej) => {
-        openDB().then(db => {
+        openMethod().then(db => {
             const tx = db.transaction([storeName], "readonly");
             const index = tx.objectStore(storeName).index(indexName);
             const req = fn(index);
@@ -62,33 +60,49 @@ function getByIndexHelperFn(storeName, indexName, fn) {
 // QUERY FUNCTIONS
 // -----------------------------
 export const QUERIES = {
-    list(storeName) {
-        return openDB().then(db => {
-            const tx = db.transaction([storeName], "readonly");
-            return new Promise((res, rej) => {
+    list(openMethod, storeName) {
+        return new Promise((res, rej) => {
+            return openMethod().then(db => {
+                const tx = db.transaction([storeName], "readonly");
                 const req = tx.objectStore(storeName).getAll();
-                req.onsuccess = evn => res(evn.target.result);
+                req.onsuccess = evn => {
+                    if (evn.target.result.length > 0) {
+                        ravenLog("QUERIES list", storeName, " FOUND", evn.target.result);
+                        res(evn.target.result)
+                    } else {
+                        ravenWarn("QUERIES list", storeName, " ERROR");
+                        rej("No " + storeName + "s were found");
+                    }
+                };
+                req.onerror = err => rej(err)
+            }).catch(err => {
+                rej("Error opening database while listing " + storeName + "s => " + err)
+            })
+        })
+    },
+    getById(openMethod, storeName, id) {
+        return new Promise((res, rej) => {
+            return openMethod().then(db => {
+                const tx = db.transaction([storeName], "readonly");
+                const req = tx.objectStore(storeName).get(id ?? -1);
+                req.onsuccess = evn => {
+                    if (id > 0 && evn.target.result) {
+                        res(evn.target.result)
+                    } else {
+                        rej("Can't find " + storeName + " with ID => ", id)
+                    }
+                };
                 req.onerror = err => rej(err)
             })
         })
     },
-    getById(storeName, id) {
-        return openDB().then(db => {
-            const tx = db.transaction([storeName], "readonly");
-            return new Promise((res, rej) => {
-                const req = tx.objectStore(storeName).get(id);
-                req.onsuccess = evn => res(evn.target.result);
-                req.onerror = err => rej(err)
-            })
-        })
-    },
-    getByIndex(storeName, indexName, ...args) {
+    getByIndex(openMethod, storeName, indexName, ...args) {
         const key = args.length === 1 ? args[0] : args;
-        return getByIndexHelperFn(storeName, indexName, idx => idx.get(key));
+        return getByIndexHelperFn(openMethod, storeName, indexName, idx => idx.get(key));
     },
-    getAllByIndex(storeName, indexName, ...args) {
+    getAllByIndex(openMethod, storeName, indexName, ...args) {
         const key = args.length === 1 ? args[0] : args;
-        return getByIndexHelperFn(storeName, indexName, idx => idx.getAll(key));
+        return getByIndexHelperFn(openMethod, storeName, indexName, idx => idx.getAll(key));
     }
 };
 

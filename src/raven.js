@@ -1,11 +1,12 @@
 import "./settings.js";
-import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, getCategoryByName, insertNonExistantCategory } from "./raven-dao.js";
-// import "./raven-interceptor.js";
+import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, insertNonExistantCategory } from "./raven-dao.js";
+import "./raven-interceptor.js";
 import "./record.js";
 import "./modal.js";
+import "./raven-logs.js";
 import { rModes, rStates } from "./constants.js";
 import { getImportedFiles, getMode, getState, isAuto, isEnabled, isManual, isRecording, ravenError, ravenLog, setRavenSession } from "./settings.js";
-import { createDownloadButton, createTextButton, displayNextSiblings, downloadJson, generateJsonName } from "./raven-utils.js";
+import { createDownloadButton, createJsonFileInput, createTextButton, displayNextSiblings, downloadJson, generateJsonName } from "./raven-utils.js";
 
 let
   panelHoverTimeOut,
@@ -13,14 +14,6 @@ let
   showExamples = false,
   navigationInterval,
   pages = new Set();
-
-
-
-// if ('serviceWorker' in navigator) {
-//   navigator.serviceWorker.register('/raven-sw.js', {
-//     scope: '/'
-//   });
-// }
 
 
 // CREATE WIDGETS 
@@ -166,7 +159,8 @@ function createExamplesContainer() {
     // Create download all section
     const examplesOptions = document.createElement('div'),
       downloadAllBtn = createTextButton('raven-button raven-download-all-content', 'Download All', 'raven-button-text', () => { getAllSessions().then(sessions => exportSessions(sessions)) }),
-      importBtn = createTextButton('raven-button raven-import', '+ Import', 'raven-button-text');
+      fileInput = createJsonFileInput((json) => { insertImportedSession(json).then(session => { createSession(session) }).catch(err => { ravenError(err) }) }),
+      importBtn = createTextButton('raven-button raven-import', '+ Import', 'raven-button-text', () => { fileInput.click(); });
 
     examplesOptions.className = 'raven-example-options-section';
     examplesOptions.appendChild(downloadAllBtn)
@@ -265,7 +259,6 @@ function assembleSessions() {
   loadSessions().then(() => {
     getAllSessions().then(sessions => {
       if (sessions.length > 0) {
-        panel.appendChild(examplesContainer);
         ravenLog("sessions : ", sessions)
         sessions.map(createSession)
       }
@@ -392,31 +385,37 @@ function loadSessions() {
 
 function loadFile(files, index, dir, resolve) {
   ravenLog("loaded path : ", dir + "/" + files[index])
-  importFile(dir + "/" + files[index]).then(session => {
-    ravenLog("all requests and routes for session : ", session, " have been inserted successfully")
-    if (++index < files.length) {
-      loadFile(files, index, dir, resolve)
-    }
-    else {
-      resolve();
-    }
-  })
-}
-
-function importFile(path) {
-  return new Promise((res, rej) => {
-    fetch(path).then(response => response.json())
-      .then(json => {
-        ravenLog("json : ", json)
-        insertNonExistantCategory(json.category ?? null).then(cateoryId => {
-          insertSession(json, cateoryId).then(session => {
-            res(session)
-          })
-        })
+  fetch(dir + "/" + files[index]).then(response => response.json())
+    .then(json => {
+      insertImportedSession(json).then(session => {
+        checkForEOF(files, index, dir, resolve);
       }).catch(err => {
-        console.error("Error reading : ", path, " => ", err)
-        res(err)
+        console.error("Error Importing files for AUTO Mode -> ", err)
+        checkForEOF(files, index, dir, resolve);
       })
+    })
+}
+function checkForEOF(files, index, dir, resolve) {
+  if (++index < files.length) {
+    loadFile(files, index, dir, resolve)
+  }
+  else {
+    resolve();
+  }
+}
+function insertImportedSession(json) {
+  return new Promise((res, rej) => {
+    ravenLog("json : ", json)
+    if (json.navigations && json.navigations != {}) {
+      insertNonExistantCategory(json.category ?? null).then(cateoryId => {
+        insertSession(json, cateoryId).then(session => {
+          ravenLog("Inserted Session : ", session, " Successfully!")
+          res(session)
+        })
+      })
+    } else {
+      rej("Wrong RAVEN file format imported! Error : No navigations detected for the session : ", json)
+    }
   })
 }
 // ASSEMBLE RAVEN
@@ -427,6 +426,7 @@ function assembleDOM() {
   panel.appendChild(recordedUrlsContainer);
   container.appendChild(panel);
   container.appendChild(indicator);
+
 }
 
 // HELPER RAVEN FUNCTIONS
@@ -459,11 +459,13 @@ function setState(state) {
     topText.textContent = 'AVEN';
     bottomText.textContent = 'EPLAY';
     panel.appendChild(toggleButton);
+    panel.appendChild(examplesContainer);
   } else {
     topText.textContent = 'RAVEN';
     bottomText.textContent = 'AVEN';
     panel.appendChild(button)
     panel.appendChild(toggleButton);
+    panel.appendChild(examplesContainer);
   }
 }
 

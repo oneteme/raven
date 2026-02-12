@@ -1,16 +1,18 @@
-import { rLocalStrg, rModes, rStates } from "./constants.js";
+import { rLocalStrg, rLogs, rModes, rStates } from "./constants.js";
 
 // SETUP RAVEN
-export let ravenParams = {
+export const ravenParams = {
     mode: rModes.MANUAL,
     state: rStates.PASSIVE,
-    loadedExample: -1,
+    loadedSession: -1,
     isReplayMode: false,
     isRecordMode: false,
     isEnabled: true,
     loadedFiles: null,
+    logs: { [rLogs.WARNING]: [], [rLogs.ERROR]: [] },
     debugMode: true
 }
+
 setDebugMode(window.rDebug);
 export function RAVEN() {
     ravenLog("setting paramters")
@@ -20,64 +22,83 @@ export function RAVEN() {
     ravenParams.isRecordMode = isRecording();
     ravenParams.isReplayMode = isReplaying();
     ravenParams.loadedFiles = window.rLoad;
-
-    ravenLog("New RAVEN params : ", ravenParams);
+    ravenWarn("New RAVEN params : ", ravenParams);
 }
+
 RAVEN();
 // RAVEN DEBUG
+function setDebugMode(mode) {
+    ravenParams.debugMode = mode ?? false;
+}
+
 function debugRaven(fn) {
     if (ravenParams.debugMode) {
         fn(console)
         // ravenLog(args)
     }
 }
+
 export function ravenLog(...args) {
     debugRaven(console => console.log(args))
 }
+
 export function ravenWarn(...args) {
-    debugRaven(console => console.warn(args))
+    addToLogs(args, rLogs.WARNING);
 }
+
 export function ravenError(...args) {
-    debugRaven(console => console.error(args))
+    addToLogs(args, rLogs.ERROR);
+}
+
+function addToLogs(logs, type = rLogs.WARNING) {
+    let logStr = logs.join("");
+    debugRaven("Adding " + type + " => " + logStr)
+    window.dispatchEvent(new CustomEvent('raven:log', {
+        detail: { log: logStr, type: type }
+    }))
 }
 
 // CHECKING FOR PARAMETERS
 function checkParamValue(v, rList) {
     return v && Object.values(rList).includes(v.toLowerCase())
 }
-function checkState(state = null) {
-    return checkParamValue(state ?? getLocalValue(rLocalStrg.STATE), rStates);
-}
-function checkMode(mode = null) {
-    return checkParamValue(mode ?? getLocalValue(rLocalStrg.MODE), rModes);
-}
+
 export function isAuto() {
     return ravenParams.mode == rModes.AUTO
 }
+
 export function isManual() {
     return ravenParams.mode == rModes.MANUAL
 }
+
 export function isEnabled() {
     return ravenParams.mode != rModes.DISABLED
 }
+
 export function isRecording() {
     return isManual() && ravenParams.state == rStates.RECORD
 }
+
 export function isReplaying() {
-    return ravenParams.state == rStates.REPLAY
+    return ravenParams.state == "REPLAY"
 }
+
 export function getMode() {
     return ravenParams.mode
 }
+
 export function getState() {
     return ravenParams.state
 }
+
 export function getSession() {
-    return ravenParams.loadedExample
+    return ravenParams.loadedSession
 }
+
 export function getImportedFiles() {
     return ravenParams.loadedFiles
 }
+
 // SETTING PARAMETERS VALUES
 
 export function setRavenState(state) {
@@ -109,7 +130,7 @@ export function setRavenSession(sessionId) {
     ravenLog("Setting RAVEN session : ", sessionId)
     if (!Number.isNaN(sessionId)) {
         setLocalValue(rLocalStrg.SESSION, sessionId)
-        ravenParams.loadedExample = sessionId
+        ravenParams.loadedSession = sessionId
         setRavenState(rStates.REPLAY)
     } else {
         removeSession();
@@ -120,18 +141,17 @@ export function setRavenSession(sessionId) {
 export function removeSession() {
     removeLocalValue(rLocalStrg.SESSION)
 }
-function setDebugMode(mode) {
-    ravenParams.debugMode = mode ?? false;
-}
 
 // LOCAL STORAGE SETTINGS
 
 function setLocalValue(k, v) {
     sessionStorage.setItem(k, v);
 }
+
 function getLocalValue(k) {
     return sessionStorage.getItem(k)
 }
+
 function removeLocalValue(k) {
     sessionStorage.removeItem(k)
 }

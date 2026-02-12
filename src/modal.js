@@ -1,4 +1,4 @@
-import { getAllCategories, getCategoryByName, insertCategory, insertCategoryOK } from "./raven-dao";
+import { getAllCategories, getCategoryByName, insertCategory } from "./raven-dao";
 import { ravenLog } from "./settings";
 
 let showingDropdown = true,

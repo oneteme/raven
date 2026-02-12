@@ -47,7 +47,39 @@ export function createTextButton(className, textContent, textClass = null, fn = 
     }
     return buttonContent
 }
+export function createFileInput(accept = null, fn) {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    if (accept) {
+        fileInput.accept = accept;
+    }
+    fileInput.multiple = true;
 
+    if (fn) {
+        fileInput.addEventListener('change', () => {
+            const files = Array.from(fileInput.files);
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        fn(e)
+                        console.log("🟢 IMPORTED file ", file.name, " Successfully")
+                    } catch (err) {
+                        console.error(`🔴 Invalid JSON in file: ${file.name} => Error : `, err);
+                    }
+                };
+                reader.readAsText(file);
+            });
+            fileInput.value = '';
+        });
+    }
+    return fileInput
+}
+export function createJsonFileInput(fn) {
+    const fileInput = createFileInput(".json", (e) => { const json = JSON.parse(e.target.result); fn(json) })
+    return fileInput
+}
 export function displayNextSiblings(div, display = "none") {
     let next = div.nextElementSibling;
 
