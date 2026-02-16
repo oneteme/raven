@@ -20,3 +20,4 @@ export const rLogs = {
     WARNING: "warning",
     ERROR: "error"
 }
+export const logEvent = "raven:log"

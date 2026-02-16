@@ -15,7 +15,15 @@ export function generateJsonName(name) {
     return name.replaceAll(" ", "_") + "_" + timestamp + ".json";
 }
 
-
+export function fetchJson(path) {
+    return new Promise((res, rej) => {
+        fetch(path).then(response => response.json()).then(json => {
+            res(json)
+        }).catch(err => {
+            rej("Error fetching json with path : ", path, " ERROR => ", err )
+        })
+    })
+}
 // WIDGETS
 export function createDownloadButton(classname, fn = null) {
     const button = document.createElement('div');

@@ -13,7 +13,6 @@ export const ravenParams = {
     debugMode: true
 }
 
-setDebugMode(window.rDebug);
 export function RAVEN() {
     ravenLog("setting paramters")
     setRavenState(getLocalValue(rLocalStrg.STATE));
@@ -34,28 +33,21 @@ function setDebugMode(mode) {
 function debugRaven(fn) {
     if (ravenParams.debugMode) {
         fn(console)
-        // ravenLog(args)
     }
 }
 
 export function ravenLog(...args) {
-    debugRaven(console => console.log(args))
+    debugRaven(console => console.log(args));
 }
 
 export function ravenWarn(...args) {
-    addToLogs(args, rLogs.WARNING);
+    debugRaven(console => console.warn(args));
+    // addToLogs(args, rLogs.WARNING);
 }
 
 export function ravenError(...args) {
-    addToLogs(args, rLogs.ERROR);
-}
-
-function addToLogs(logs, type = rLogs.WARNING) {
-    let logStr = logs.join("");
-    debugRaven("Adding " + type + " => " + logStr)
-    window.dispatchEvent(new CustomEvent('raven:log', {
-        detail: { log: logStr, type: type }
-    }))
+    debugRaven(console => console.error(args));
+    // addToLogs(args, rLogs.ERROR);
 }
 
 // CHECKING FOR PARAMETERS
@@ -80,7 +72,7 @@ export function isRecording() {
 }
 
 export function isReplaying() {
-    return ravenParams.state == "REPLAY"
+    return ravenParams.state == rStates.REPLAY
 }
 
 export function getMode() {

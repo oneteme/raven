@@ -1,3 +1,4 @@
+import { logEvent } from "./constants";
 import { getRequestbyRouteRequest, getRouteBySessionUrl, insertSession } from "./raven-dao";
 import { downloadJson, generateJsonName } from "./raven-utils";
 import { getSession, isRecording, isReplaying, ravenError, ravenLog, ravenParams, ravenWarn } from "./settings";
@@ -99,11 +100,17 @@ import { getSession, isRecording, isReplaying, ravenError, ravenLog, ravenParams
                             return;
                         }).catch(err => {
                             ravenWarn(err)
+                            dispatchEvent(new CustomEvent(logEvent, {
+                                detail: { code: 30 }
+                            }));
                             fakeEmptyResponse(xhr)
                             return;
                         })
                 }).catch(err => {
                     ravenWarn(err)
+                    dispatchEvent(new CustomEvent(logEvent, {
+                        detail: { code: 20 }
+                    }));
                     fakeEmptyResponse(xhr)
                     return;
                 });
@@ -138,7 +145,7 @@ import { getSession, isRecording, isReplaying, ravenError, ravenLog, ravenParams
             try {
                 if (xhr.__method !== 'GET') return;
                 const key = encodeURIComponent(xhr.__url);
-                navigations[xhr.__pageUrl] ??= {}
+                navigations[xhr.__pageUrl] ??= { "title": document.title }
                 if (navigations[xhr.__pageUrl][key] != undefined) return;
                 navigations[xhr.__pageUrl][key] = {}
                 navigations[xhr.__pageUrl][key]["response"] = JSON.parse(xhr.responseText);
@@ -149,13 +156,13 @@ import { getSession, isRecording, isReplaying, ravenError, ravenLog, ravenParams
         return xhr;
     }
     addEventListener("snapshot", (e) => {
-        let recordedSession = {
+        const recordedSession = {
             "title": e.detail.title,
             "description": e.detail.description,
             "category": e.detail.category,
             "navigations": navigations
-        }
-        insertSession(recordedSession, e.detail.categoryId).then(session => {
+        };
+        insertSession(recordedSession, recordedSession["category"]).then(session => {
             ravenLog("session inserted : ", session)
             if (e.detail.download) {
                 downloadJson(recordedSession, generateJsonName(recordedSession["title"]))

@@ -47,17 +47,19 @@ export function insertSession(metaData, categoryId = null) {
             sessionStore.add(session).onsuccess = evn => {
                 const sessionId = evn.target.result;
                 session["id"] = sessionId
-                saveSessionRoutes(routeStore, requestStore, metaData.navigations, sessionId)
+                insertSessionRoutes(routeStore, requestStore, metaData.navigations, sessionId)
             };
             tx.oncomplete = evn => res(session);
             tx.onerror = err => rej(err)
         })
     })
 }
-function saveSessionRoutes(routesStore, requestsStore, routes, sessionId) {
+function insertSessionRoutes(routesStore, requestsStore, routes, sessionId) {
     for (const route of Object.keys(routes)) {
-        const requests = routes[route];
-        routesStore.add({ route, "sessionId": sessionId }).onsuccess = evn => {
+        const { title: routeTitle, ...requests } = routes[route];
+        delete requests.title
+        ravenLog("title", routeTitle, "requests:", requests)
+        routesStore.add({ route, "title": routeTitle, "sessionId": sessionId }).onsuccess = evn => {
             for (const request of Object.keys(requests)) {
                 requestsStore.add({ routeId: evn.target.result, url: request, xhr: requests[request] });
             }

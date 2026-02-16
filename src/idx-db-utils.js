@@ -82,9 +82,11 @@ export const QUERIES = {
     },
     getById(openMethod, storeName, id) {
         return new Promise((res, rej) => {
-            return openMethod().then(db => {
+            openMethod().then(db => {
+                id = id && !Number.isNaN(id) ? id : -1
+                ravenLog("getById", storeName, "ID", id)
                 const tx = db.transaction([storeName], "readonly");
-                const req = tx.objectStore(storeName).get(id ?? -1);
+                const req = tx.objectStore(storeName).get(id);
                 req.onsuccess = evn => {
                     if (id > 0 && evn.target.result) {
                         res(evn.target.result)

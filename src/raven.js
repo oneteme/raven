@@ -1,12 +1,13 @@
 import "./settings.js";
 import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, insertNonExistantCategory } from "./raven-dao.js";
 import "./raven-interceptor.js";
-import "./record.js";
+import "./raven-demo.js";
+import "./raven-actions.js";
 import "./modal.js";
 import "./raven-logs.js";
-import { rModes, rStates } from "./constants.js";
-import { getImportedFiles, getMode, getState, isAuto, isEnabled, isManual, isRecording, ravenError, ravenLog, setRavenSession } from "./settings.js";
-import { createDownloadButton, createJsonFileInput, createTextButton, displayNextSiblings, downloadJson, generateJsonName } from "./raven-utils.js";
+import { logEvent, rModes, rStates } from "./constants.js";
+import { getImportedFiles, getMode, getState, isAuto, isEnabled, isManual, isRecording, ravenLog, setRavenSession } from "./settings.js";
+import { createDownloadButton, createJsonFileInput, createTextButton, displayNextSiblings, downloadJson, fetchJson, generateJsonName } from "./raven-utils.js";
 
 let
   panelHoverTimeOut,
@@ -15,20 +16,19 @@ let
   navigationInterval,
   pages = new Set();
 
-
 // CREATE WIDGETS 
 const container = document.createElement('div');
 container.className = 'raven-container';
 
-const indicator = createIndicator();
-const panel = createPanel();
-const modeHeader = createModeHeader();
-const toggleButton = createToggleButton();
-const recordIcon = createRecordIcon();
-const button = createRecordButton(recordIcon);
-const examplesContainer = createExamplesContainer();
-const urlsList = createRecordUrlsList();
-const recordedUrlsContainer = createRecordUrls();
+const indicator = createIndicator(),
+  panel = createPanel(),
+  modeHeader = createModeHeader(),
+  toggleButton = createToggleButton(),
+  recordIcon = createRecordIcon(),
+  button = createRecordButton(recordIcon),
+  examplesContainer = createExamplesContainer(),
+  urlsList = createRecordUrlsList(),
+  recordedUrlsContainer = createRecordUrls();
 
 // WIDGETS HELPERS
 function createIndicator() {
@@ -158,8 +158,24 @@ function createExamplesContainer() {
   if (isManual()) {
     // Create download all section
     const examplesOptions = document.createElement('div'),
-      downloadAllBtn = createTextButton('raven-button raven-download-all-content', 'Download All', 'raven-button-text', () => { getAllSessions().then(sessions => exportSessions(sessions)) }),
-      fileInput = createJsonFileInput((json) => { insertImportedSession(json).then(session => { createSession(session) }).catch(err => { ravenError(err) }) }),
+      downloadAllBtn = createTextButton('raven-button raven-download-all-content', 'Download All', 'raven-button-text', () => {
+        getAllSessions().then(sessions => exportSessions(sessions))
+          .catch(err => {
+            dispatchEvent(new CustomEvent(logEvent, {
+              detail: { code: 50 }
+            }));
+          })
+      }),
+      fileInput = createJsonFileInput((json) => {
+        insertImportedSession(json).then(session => {
+          createSession(session)
+
+        }).catch(err => {
+          dispatchEvent(new CustomEvent(logEvent, {
+            detail: { code: 40 }
+          }));
+        })
+      }),
       importBtn = createTextButton('raven-button raven-import', '+ Import', 'raven-button-text', () => { fileInput.click(); });
 
     examplesOptions.className = 'raven-example-options-section';
@@ -369,23 +385,21 @@ function loadSessions() {
       resolve();
     } else if (isAuto() && getImportedFiles() != null)
       getAllSessions().then(sessions => {
+        resolve();
         ravenLog("sessions : ", sessions)
-        if (sessions.length <= 0) {
-          ravenLog("files exist and Raven is on AUTO Mode")
-          fetch(getImportedFiles()).then((response) => response.json()).then(jsonIndex => {
-            ravenLog("index files : ", jsonIndex);
-            loadFile(jsonIndex.files, 0, jsonIndex.dir ?? "", resolve);
-          })
-        } else {
-          resolve();
-        }
+      }).catch(err => {
+        ravenLog("files exist and Raven is on AUTO Mode")
+        fetchJson(getImportedFiles()).then(jsonIndex => {
+          ravenLog("index files : ", jsonIndex);
+          loadFile(jsonIndex.files, 0, jsonIndex.dir ?? "", resolve);
+        })
       });
   })
 }
 
 function loadFile(files, index, dir, resolve) {
   ravenLog("loaded path : ", dir + "/" + files[index])
-  fetch(dir + "/" + files[index]).then(response => response.json())
+  fetchJson(dir + "/" + files[index])
     .then(json => {
       insertImportedSession(json).then(session => {
         checkForEOF(files, index, dir, resolve);
