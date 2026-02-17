@@ -17,7 +17,12 @@ export const rLocalStrg = {
 }
 
 export const rLogs = {
+    SUCCESS: "success",
     WARNING: "warning",
     ERROR: "error"
 }
-export const logEvent = "raven:log"
+
+export const startReplayEvent = "raven:replay:start"
+export const stopReplayEvent = "raven:replay:stop"
+export const startRecordingEvent = "raven:recording:start"
+export const stopRecordingEvent = "raven:recording:stop"

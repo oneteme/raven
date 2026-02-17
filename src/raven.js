@@ -1,261 +1,22 @@
 import "./settings.js";
-import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, insertNonExistantCategory } from "./raven-dao.js";
+import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, insertNonExistantCategory } from "./db/raven-dao.js";
 import "./raven-interceptor.js";
-import "./raven-demo.js";
+import "./widgets/raven-demo.js";
 import "./raven-actions.js";
-import "./modal.js";
-import "./raven-logs.js";
-import { logEvent, rModes, rStates } from "./constants.js";
-import { getImportedFiles, getMode, getState, isAuto, isEnabled, isManual, isRecording, ravenLog, setRavenSession } from "./settings.js";
-import { createDownloadButton, createJsonFileInput, createTextButton, displayNextSiblings, downloadJson, fetchJson, generateJsonName } from "./raven-utils.js";
-
-let
-  panelHoverTimeOut,
-  panelHideTimer = 600,
-  showExamples = false,
-  navigationInterval,
-  pages = new Set();
+import "./widgets/modal.js";
+import "./widgets/raven-logs.js";
+import { getImportedFiles, isAuto, isEnabled, isManual, ravenLog, setRavenSession } from "./settings.js";
+import { createDownloadBtn, displayNextSiblings, downloadJson, fetchJson, generateJsonName } from "./utils/raven-utils.js";
+import { appendExamplesOptions, createDownloadAllBtn, createImportBtn, examplesContainer, indicator, modeHeader, panel, setMode, setState } from "./widgets/raven-panel.js";
+import { logEvent } from "./utils/ravents.js";
 
 // CREATE WIDGETS 
 const container = document.createElement('div');
 container.className = 'raven-container';
 
-const indicator = createIndicator(),
-  panel = createPanel(),
-  modeHeader = createModeHeader(),
-  toggleButton = createToggleButton(),
-  recordIcon = createRecordIcon(),
-  button = createRecordButton(recordIcon),
-  examplesContainer = createExamplesContainer(),
-  urlsList = createRecordUrlsList(),
-  recordedUrlsContainer = createRecordUrls();
-
-// WIDGETS HELPERS
-function createIndicator() {
-  const indicator = document.createElement('div');
-  indicator.className = 'raven-indicator raven-indicator--passive';
-
-  const content = document.createElement('div');
-  content.className = 'raven-indicator__content';
-
-  const dot = document.createElement('div');
-  dot.className = 'raven-indicator__dot';
-
-  const bigLetter = document.createElement('div');
-  bigLetter.className = 'raven-indicator__big-letter';
-  bigLetter.textContent = 'R';
-
-  const textStack = document.createElement('div');
-  textStack.className = 'raven-indicator__text-stack';
-
-  const topText = document.createElement('div');
-  topText.className = 'raven-indicator__top-text';
-  topText.textContent = 'RAVEN';
-
-  const bottomText = document.createElement('div');
-  bottomText.className = 'raven-indicator__bottom-text';
-  bottomText.textContent = 'AVEN';
-
-  textStack.appendChild(topText);
-  textStack.appendChild(bottomText);
-
-  content.appendChild(dot);
-  content.appendChild(bigLetter);
-  content.appendChild(textStack);
-
-  indicator.appendChild(content);
-  indicator.addEventListener('mouseenter', () => {
-    panel.classList.add('raven-panel--visible');
-    panel.classList.remove('raven-panel--hidden');
-    indicator.style.opacity = '0';
-  });
-
-  return indicator;
-}
-function createModeHeader() {
-  const header = document.createElement('div');
-  header.className = 'raven-mode-header raven-mode-header--manual';
-  header.textContent = 'Manual Mode';
-  return header;
-}
-
-function createPanel() {
-  const panel = document.createElement('div');
-  panel.className = 'raven-panel';
-
-  // Keep panel open when hovering over it
-  panel.addEventListener('mouseenter', () => {
-    panelHoverTimeOut = clearTimeout(panelHoverTimeOut)
-    panelHideTimer = 600
-    panel.classList.add('raven-panel--visible');
-    panel.classList.remove('raven-panel--hidden');
-    indicator.style.opacity = '0';
-  });
-
-  // Hide panel when leaving both indicator and panel
-  panel.addEventListener('mouseleave', () => {
-    panelHoverTimeOut = setTimeout(() => {
-      panel.classList.remove('raven-panel--visible');
-      panel.classList.add('raven-panel--hidden');
-      indicator.style.opacity = '1';
-    }, panelHideTimer);
-  });
-
-  return panel;
-}
-
-function createToggleButton() {
-  const toggleButton = document.createElement('div');
-  toggleButton.className = 'raven-toggle-button';
-  toggleButton.textContent = 'Show Examples';
-
-  // Toggle examples functionality
-  toggleButton.addEventListener('click', () => {
-    showExamples = !showExamples;
-
-    if (showExamples) {
-      toggleButton.textContent = 'Hide Examples';
-      examplesContainer.classList.add('raven-examples-container--visible');
-    } else {
-      panelHideTimer = 3000
-      toggleButton.textContent = 'Show Examples';
-      examplesContainer.classList.remove('raven-examples-container--visible');
-    }
-  });
-
-  return toggleButton;
-}
-
-function createRecordIcon() {
-  const recordIcon = document.createElement('div');
-  recordIcon.className = 'raven-record-icon';
-  return recordIcon;
-}
-
-function createRecordButton(recordIcon) {
-  const button = document.createElement('div');
-  button.className = 'raven-record-button';
-  button.appendChild(recordIcon);
-
-  // Recording functionality
-  button.addEventListener('click', () => {
-    if (isRecording()) {
-      dispatchEvent(new CustomEvent("recording:stop"))
-      stopRecording();
-    } else {
-      dispatchEvent(new CustomEvent("recording:start"))
-    }
-  });
-
-  return button;
-}
-
-
-function createExamplesContainer() {
-  const examplesContainer = document.createElement('div');
-  examplesContainer.className = 'raven-examples-container raven-scroll';
-
-  if (isManual()) {
-    // Create download all section
-    const examplesOptions = document.createElement('div'),
-      downloadAllBtn = createTextButton('raven-button raven-download-all-content', 'Download All', 'raven-button-text', () => {
-        getAllSessions().then(sessions => exportSessions(sessions))
-          .catch(err => {
-            dispatchEvent(new CustomEvent(logEvent, {
-              detail: { code: 50 }
-            }));
-          })
-      }),
-      fileInput = createJsonFileInput((json) => {
-        insertImportedSession(json).then(session => {
-          createSession(session)
-
-        }).catch(err => {
-          dispatchEvent(new CustomEvent(logEvent, {
-            detail: { code: 40 }
-          }));
-        })
-      }),
-      importBtn = createTextButton('raven-button raven-import', '+ Import', 'raven-button-text', () => { fileInput.click(); });
-
-    examplesOptions.className = 'raven-example-options-section';
-    examplesOptions.appendChild(downloadAllBtn)
-    examplesOptions.appendChild(importBtn)
-    examplesContainer.appendChild(examplesOptions);
-  }
-  return examplesContainer;
-}
-
-function createRecordUrlsList() {
-  const urlsList = document.createElement('div');
-  urlsList.className = 'raven-urls-list';
-  return urlsList
-}
-
-function createRecordUrls() {
-  const recordedUrlsContainer = document.createElement('div');
-  recordedUrlsContainer.className = 'raven-recorded-urls raven-scroll';
-
-  const recordedUrlsTitle = document.createElement('div');
-  recordedUrlsTitle.className = 'raven-recorded-urls__title';
-  recordedUrlsTitle.innerHTML = 'Recorded Pages <span id="recordedCount" class="raven-recorded-urls__count">0</span>';
-
-  recordedUrlsContainer.appendChild(recordedUrlsTitle);
-  recordedUrlsContainer.appendChild(urlsList);
-  return recordedUrlsContainer;
-}
-
-// INFORMATION DURING RECORD
-function addRecordedUrl(url, title = null) {
-  if (!pages.has(url)) {
-    pages.add(url)
-    const urlItem = document.createElement('div');
-    urlItem.className = 'raven-url-item';
-
-    const bullet = document.createElement('div');
-    bullet.className = 'raven-url-item__bullet';
-
-    const textContainer = document.createElement('div');
-    textContainer.className = 'raven-url-item__text-container';
-
-    if (title) {
-      // Show both title and URL
-      const titleText = document.createElement('div');
-      titleText.className = 'raven-url-item__title';
-      titleText.textContent = title;
-
-      const urlText = document.createElement('div');
-      urlText.className = 'raven-url-item__url';
-      urlText.textContent = url;
-
-      textContainer.appendChild(titleText);
-      textContainer.appendChild(urlText);
-    } else {
-      // Show only URL
-      const urlText = document.createElement('div');
-      urlText.className = 'raven-url-item__url raven-url-item__url--single';
-      urlText.textContent = url;
-      textContainer.appendChild(urlText);
-    }
-
-    urlItem.appendChild(bullet);
-    urlItem.appendChild(textContainer);
-    urlsList.appendChild(urlItem);
-
-    // Update counter
-    setPageCount(pages.size)
-  }
-}
-
-function setPageCount(count) {
-  const counter = document.getElementById('recordedCount');
-  if (counter) {
-    counter.textContent = count;
-  }
-}
-
 // SESSIONS FUNCITONS
 function exportSessions(sessions, index = 0, indexJson = { "dir": "", "files": [] }) {
+  ravenLog("[EXPORT SESSION]", sessions, index)
   const session = sessions[index]
   exportSession(session).then(exportedJson => {
     const jsonName = generateJsonName(exportedJson.title);
@@ -263,7 +24,9 @@ function exportSessions(sessions, index = 0, indexJson = { "dir": "", "files": [
     indexJson.files.push(jsonName)
     ravenLog("export session index : ", index)
     if (++index < sessions.length) {
-      exportSessions(sessions, index, indexJson)
+      setTimeout(() => {
+        exportSessions(sessions, index, indexJson)
+      }, 200);
     } else {
       ravenLog("indexJson : ", indexJson)
       downloadJson(indexJson, "index.json")
@@ -285,6 +48,24 @@ function assembleSessions() {
 
 }
 
+function loadSessions() {
+  return new Promise(resolve => {
+    if (isManual()) {
+      resolve();
+    } else if (isAuto() && getImportedFiles() != null)
+      getAllSessions().then(sessions => {
+        ravenLog("AUTO MODE sessions : ", sessions)
+        resolve();
+      }).catch(err => {
+        ravenLog("files exist and Raven is on AUTO Mode")
+        fetchJson(getImportedFiles()).then(jsonIndex => {
+          ravenLog("index files : ", jsonIndex);
+          loadFile(jsonIndex.files, 0, jsonIndex.dir ?? "", resolve);
+        })
+      });
+  })
+}
+
 function createSession(session) {
   const item = document.createElement('div');
   item.className = 'raven-session-item';
@@ -296,8 +77,9 @@ function createSession(session) {
   const descEl = document.createElement('div');
   descEl.className = 'raven-session-item__description';
   descEl.textContent = session.description;
+
   // Create download button
-  const downloadBtn = createDownloadButton('raven-session-item__download-btn', (e) => {
+  const downloadBtn = createDownloadBtn('raven-session-item__download-btn', (e) => {
     e.stopPropagation();
     exportSession(session).then(exportedJson => {
       const jsonName = generateJsonName(exportedJson.title);
@@ -322,16 +104,21 @@ function createSession(session) {
       }
     })
   });
-  getCategoryById(session.category).then(category => {
-    item.style.display = "none"
-    setupSessionCategory(category.name).then(categoryDiv => categoryDiv.appendChild(item));
-    ravenLog("found CATEGORY in SESSION", category)
-  }).catch(err => {
-    ravenLog("NO CATEGORY FOUND")
+  if (session.category) {
+    getCategoryById(session.category).then(category => {
+      item.style.display = "none"
+      setupSessionCategory(category.name).then(categoryDiv => categoryDiv.appendChild(item));
+      ravenLog("found CATEGORY in SESSION", category)
+    }).catch(err => {
+      ravenLog("NO CATEGORY FOUND")
+      examplesContainer.append(item)
+    });
+  } else {
     examplesContainer.append(item)
-  });
+  }
   return item
 }
+
 function setupSessionCategory(categoryName) {
   return new Promise(res => {
     let div = document.querySelector(`[category="${categoryName}"]`);
@@ -376,25 +163,8 @@ function createCategoryAccordion(categoryName) {
   });
   accordion.setAttribute("category", categoryName);
   accordion.appendChild(header);
-  examplesContainer.appendChild(accordion)
+  examplesContainer.appendChild(accordion);
   return accordion;
-}
-function loadSessions() {
-  return new Promise(resolve => {
-    if (isManual()) {
-      resolve();
-    } else if (isAuto() && getImportedFiles() != null)
-      getAllSessions().then(sessions => {
-        resolve();
-        ravenLog("sessions : ", sessions)
-      }).catch(err => {
-        ravenLog("files exist and Raven is on AUTO Mode")
-        fetchJson(getImportedFiles()).then(jsonIndex => {
-          ravenLog("index files : ", jsonIndex);
-          loadFile(jsonIndex.files, 0, jsonIndex.dir ?? "", resolve);
-        })
-      });
-  })
 }
 
 function loadFile(files, index, dir, resolve) {
@@ -409,14 +179,7 @@ function loadFile(files, index, dir, resolve) {
       })
     })
 }
-function checkForEOF(files, index, dir, resolve) {
-  if (++index < files.length) {
-    loadFile(files, index, dir, resolve)
-  }
-  else {
-    resolve();
-  }
-}
+
 function insertImportedSession(json) {
   return new Promise((res, rej) => {
     ravenLog("json : ", json)
@@ -432,90 +195,46 @@ function insertImportedSession(json) {
     }
   })
 }
-// ASSEMBLE RAVEN
-function assembleDOM() {
-  panel.appendChild(modeHeader);
-  setMode(getMode())
-  setState(getState())
-  panel.appendChild(recordedUrlsContainer);
-  container.appendChild(panel);
-  container.appendChild(indicator);
 
-}
-
-// HELPER RAVEN FUNCTIONS
-function setMode(mode) {
-  ravenLog("setting RAVEN MODE : ", mode)
-  // Update mode header
-  modeHeader.className = `raven-mode-header raven-mode-header--${mode}`;
-  modeHeader.textContent = mode === rModes.MANUAL ? 'Manual Mode' : 'Auto Mode';
-
-  // Update panel style
-  panel.classList.remove('raven-panel--manual', 'raven-panel--auto');
-  panel.classList.add(`raven-panel--${mode}`);
-}
-
-function setState(state) {
-  ravenLog("setting RAVEN STATE : ", state)
-  // Update indicator
-  indicator.className = `raven-indicator raven-indicator--${state}`;
-
-  // Update indicator text
-  const topText = indicator.querySelector('.raven-indicator__top-text');
-  const bottomText = indicator.querySelector('.raven-indicator__bottom-text');
-
-  if (state === rStates.RECORD) {
-    topText.textContent = 'AVEN';
-    bottomText.textContent = 'ECORD';
-    panel.appendChild(button)
-    startRecording();
-  } else if (state === rStates.REPLAY) {
-    topText.textContent = 'AVEN';
-    bottomText.textContent = 'EPLAY';
-    panel.appendChild(toggleButton);
-    panel.appendChild(examplesContainer);
-  } else {
-    topText.textContent = 'RAVEN';
-    bottomText.textContent = 'AVEN';
-    panel.appendChild(button)
-    panel.appendChild(toggleButton);
-    panel.appendChild(examplesContainer);
+function checkForEOF(files, index, dir, resolve) {
+  if (++index < files.length) {
+    loadFile(files, index, dir, resolve)
+  }
+  else {
+    resolve();
   }
 }
 
-function startRecording() {
-  detectNavigation();
-  recordIcon.classList.add('raven-record-icon--recording');
-  button.classList.add('raven-record-button--recording');
-  recordedUrlsContainer.classList.add('raven-recorded-urls--visible');
-  setTimeout(() => {
-    addRecordedUrl(location.hash, document.title)
-  }, 1000);
+// ASSEMBLE RAVEN
+function assembleDOM() {
+  panel.appendChild(modeHeader);
+  setMode();
+  setState();
+  if (isManual()) {
+    const downloadAllBtn = createDownloadAllBtn(() => {
+      getAllSessions().then(sessions => {
+        exportSessions(sessions);
+        logEvent(100)
+      })
+        .catch(err => {
+          logEvent(50)
+          console.error("[RAVEN DOWNLOAD ALL]", err)
+        })
+    }),
+      importBtn = createImportBtn((json) => {
+        insertImportedSession(json).then(session => {
+          createSession(session)
+          logEvent(101)
+        }).catch(err => {
+          logEvent(40)
+        })
+      });
+    appendExamplesOptions([downloadAllBtn, importBtn])
+  }
+  container.appendChild(panel);
+  container.appendChild(indicator);
 }
 
-function stopRecording() {
-  recordIcon.classList.remove('raven-record-icon--recording');
-  button.classList.remove('raven-record-button--recording');
-  urlsList.innerHTML = '';
-  setPageCount(0);
-  stopNavigationDetection();
-}
-
-function detectNavigation() {
-  let last = location.href;
-  navigationInterval = setInterval(async () => {
-    if (location.href !== last) {
-      last = location.href;
-      addRecordedUrl(location.hash, document.title)
-    }
-  }, 100);
-}
-
-
-
-function stopNavigationDetection() {
-  clearInterval(navigationInterval);
-}
 
 if (isEnabled()) {
   assembleDOM();

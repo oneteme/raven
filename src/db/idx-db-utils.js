@@ -1,4 +1,4 @@
-import { ravenError, ravenLog, ravenWarn } from "./settings";
+import { ravenError, ravenLog, ravenWarn } from "../settings";
 
 // -----------------------------
 // database funcitons 

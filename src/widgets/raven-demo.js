@@ -1,7 +1,18 @@
-import { isReplaying } from "./settings";
+import { replayEvent } from "../utils/ravents";
+import { isReplaying } from "../settings";
 
+const demoNav = createDemoNav();
 if (isReplaying()) {
-    const demoNav = createDemoNav();
+    document.body.appendChild(demoNav);
+    openDemoNav({
+        title: "Raven example",
+        pages: [
+            { title: "Page 1" },
+            { title: "Page 2" },
+            { title: "Page 3" }
+        ],
+        currentPageIndex: 2
+    });
 }
 
 // DEMO NAVIGATION WIDGET
@@ -58,8 +69,6 @@ function createDemoNav() {
     nav.appendChild(dropdown);
     nav.appendChild(closeBtn);
 
-    document.body.appendChild(nav);
-
     // Event listeners
     menuBtn.addEventListener('click', () => {
         dropdown.classList.toggle('raven-demo-nav__dropdown--visible');
@@ -79,7 +88,6 @@ function createDemoNav() {
     return nav;
 }
 
-
 function openDemoNav(sessionData) {
     const { title, pages, currentPageIndex } = sessionData;
 
@@ -95,8 +103,7 @@ function openDemoNav(sessionData) {
 }
 
 function closeDemoNav() {
-    demoNav.classList.remove('raven-demo-nav--visible');
-    dispatchEvent(new CustomEvent("raven:exitDemo"));
+    replayEvent();
 }
 
 function updateDemoNavPage(pages, currentPageIndex) {

@@ -1,4 +1,4 @@
-import { rLocalStrg, rLogs, rModes, rStates } from "./constants.js";
+import { rLocalStrg, rModes, rStates } from "./utils/constants.js";
 
 // SETUP RAVEN
 export const ravenParams = {
@@ -9,10 +9,9 @@ export const ravenParams = {
     isRecordMode: false,
     isEnabled: true,
     loadedFiles: null,
-    logs: { [rLogs.WARNING]: [], [rLogs.ERROR]: [] },
-    debugMode: true
+    debugMode: false
 }
-
+setDebugMode(window.rDebug);
 export function RAVEN() {
     ravenLog("setting paramters")
     setRavenState(getLocalValue(rLocalStrg.STATE));
@@ -25,9 +24,10 @@ export function RAVEN() {
 }
 
 RAVEN();
+
 // RAVEN DEBUG
-function setDebugMode(mode) {
-    ravenParams.debugMode = mode ?? false;
+function setDebugMode(mode = false) {
+    ravenParams.debugMode = mode;
 }
 
 function debugRaven(fn) {
@@ -42,12 +42,10 @@ export function ravenLog(...args) {
 
 export function ravenWarn(...args) {
     debugRaven(console => console.warn(args));
-    // addToLogs(args, rLogs.WARNING);
 }
 
 export function ravenError(...args) {
     debugRaven(console => console.error(args));
-    // addToLogs(args, rLogs.ERROR);
 }
 
 // CHECKING FOR PARAMETERS

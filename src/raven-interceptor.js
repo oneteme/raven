@@ -1,7 +1,7 @@
-import { logEvent } from "./constants";
-import { getRequestbyRouteRequest, getRouteBySessionUrl, insertSession } from "./raven-dao";
-import { downloadJson, generateJsonName } from "./raven-utils";
-import { getSession, isRecording, isReplaying, ravenError, ravenLog, ravenParams, ravenWarn } from "./settings";
+import { getRequestbyRouteRequest, getRouteBySessionUrl, insertSession } from "./db/raven-dao";
+import { downloadJson, generateJsonName } from "./utils/raven-utils";
+import { logEvent } from "./utils/ravents";
+import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./settings";
 (function () {
     let navigations = {};
 
@@ -100,17 +100,13 @@ import { getSession, isRecording, isReplaying, ravenError, ravenLog, ravenParams
                             return;
                         }).catch(err => {
                             ravenWarn(err)
-                            dispatchEvent(new CustomEvent(logEvent, {
-                                detail: { code: 30 }
-                            }));
+                            logEvent(30)
                             fakeEmptyResponse(xhr)
                             return;
                         })
                 }).catch(err => {
                     ravenWarn(err)
-                    dispatchEvent(new CustomEvent(logEvent, {
-                        detail: { code: 20 }
-                    }));
+                    logEvent(20)
                     fakeEmptyResponse(xhr)
                     return;
                 });
@@ -162,7 +158,7 @@ import { getSession, isRecording, isReplaying, ravenError, ravenLog, ravenParams
             "category": e.detail.category,
             "navigations": navigations
         };
-        insertSession(recordedSession, recordedSession["category"]).then(session => {
+        insertSession(recordedSession, e.detail.categoryId).then(session => {
             ravenLog("session inserted : ", session)
             if (e.detail.download) {
                 downloadJson(recordedSession, generateJsonName(recordedSession["title"]))

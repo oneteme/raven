@@ -1,4 +1,4 @@
-import { logEvent, rLogs } from "./constants";
+import {  rLogs } from "../utils/constants";
 
 const toastsContainer = createToastsContainer(),
     rMessages = {
@@ -7,103 +7,18 @@ const toastsContainer = createToastsContainer(),
         11: createLogMessage("There are no RAVEN Sessions"),
         20: createLogMessage("RAVEN routes could not be found"),
         30: createLogMessage("RAVEN requests could not be found"),
-        41: createLogMessage("Wrong RAVEN file format => no navigations detected", rLogs.ERROR),
-        40: createLogMessage("Error fetching file", rLogs.ERROR),
-        50: createLogMessage("Download failed => Could not find sessions", rLogs.ERROR)
+        40: createLogMessage("<i>Session import</i> : FAIL => <b>Wrong RAVEN file format</b>", rLogs.ERROR),
+        41: createLogMessage("Error fetching file", rLogs.ERROR),
+        50: createLogMessage("<i>Download All</i> : FAIL => <b>No sessions found</b>", rLogs.ERROR),
+        100: createLogMessage("<i>All Sessions export</i> : SUCCESS", rLogs.SUCCESS),
+        101: createLogMessage("<i>Session import</i> : SUCCESS", rLogs.SUCCESS)
     };
 let logs = new Map();
 
-window.addEventListener(logEvent, (e) => {
+window.addEventListener("raven:log", (e) => {
     console.log("adding RAVEN log", e.detail)
     showToastNotification(e.detail.code)
 });
-// function createLogsModal() {
-//     console.log("creating logs modal")
-//     const modal = document.createElement('div');
-//     modal.className = 'raven-logs-modal';
-
-//     const box = document.createElement('div');
-//     box.className = 'raven-logs-modal__box';
-
-//     const header = document.createElement('div');
-//     header.className = 'raven-logs-modal__header';
-
-//     const title = document.createElement('div');
-//     title.className = 'raven-logs-modal__title';
-//     title.textContent = 'RAVEN LOGS';
-
-//     header.appendChild(title);
-
-//     const content = document.createElement('div');
-//     content.className = 'raven-logs-modal__content';
-
-//     const footer = document.createElement('div');
-//     footer.className = 'raven-logs-modal__footer';
-
-//     const closeBtn = createTextButton('raven-logs-modal__close-btn', "Close", null, () => { closeLogsModal(); });
-
-//     footer.appendChild(closeBtn);
-
-//     box.appendChild(header);
-//     box.appendChild(content);
-//     box.appendChild(footer);
-//     modal.appendChild(box);
-
-//     document.body.appendChild(modal);
-
-//     return modal;
-// }
-
-// // LOGS MODAL FUNCTIONS
-// function openLogsModal() {
-//     logsModal.classList.add('raven-logs-modal--visible');
-// }
-
-// function closeLogsModal() {
-//     console.log("closing modal")
-//     logsModal.classList.remove('raven-logs-modal--visible');
-// }
-
-// function addLog(code) {
-//     const message = rMessages[code] ?? rMessages[0],
-//         content = logsModal.querySelector('.raven-logs-modal__content');
-//     const logContainer = document.createElement('div');
-//     logContainer.className = `raven-log-container ${message.type}`;
-
-//     const typeLabel = document.createElement('div');
-//     typeLabel.className = 'raven-log-container__type';
-//     typeLabel.textContent = message.type;
-
-//     const text = document.createElement('div');
-//     text.className = 'raven-log-container__text';
-//     text.textContent = message.text;
-
-//     const timestamp = document.createElement('div');
-//     timestamp.className = 'raven-log-container__timestamp';
-//     timestamp.textContent = new Date().toLocaleTimeString();
-
-//     logContainer.appendChild(typeLabel);
-//     logContainer.appendChild(text);
-//     logContainer.appendChild(timestamp);
-
-//     content.prepend(logContainer)
-
-//     // Auto scroll to top
-//     content.scrollTo({
-//         top: 0,
-//         behavior: "auto" // or "smooth"
-//     });
-//     // openLogsModal();
-//     showToastNotification(code)
-// }
-
-// function clearLogs() {
-//     const content = logsModal.querySelector('.raven-logs-modal__content');
-//     content.innerHTML = '';
-// }
-
-
-// TOAST NOTIFICATIONS
 
 function createToastsContainer() {
     const container = document.createElement('div');
@@ -154,7 +69,7 @@ function showToastNotification(code, duration = 10000) {
     // Message
     const messageEl = document.createElement('div');
     messageEl.className = 'raven-toast__message';
-    messageEl.textContent = message;
+    messageEl.innerHTML = message;
 
     // Progress bar
     const progress = document.createElement('div');
@@ -258,7 +173,6 @@ function removeToast(toastData) {
     }, 300);
 }
 
-console.log("RAVEN messages : ", rMessages)
 function createLogMessage(text, type = rLogs.WARNING) {
     return {
         text,

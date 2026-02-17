@@ -1,5 +1,5 @@
-import { getAllCategories, getCategoryByName, insertCategory } from "./raven-dao";
-import { ravenLog } from "./settings";
+import { getAllCategories, getCategoryByName, insertCategory } from "../db/raven-dao";
+import { ravenLog } from "../settings";
 
 let showingDropdown = true,
   categoryInputTimeOut,

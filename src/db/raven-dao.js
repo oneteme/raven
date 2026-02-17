@@ -1,5 +1,5 @@
 import { createDB, openDB, QUERIES } from "./idx-db-utils";
-import { ravenLog } from "./settings";
+import { ravenLog } from "../settings";
 
 const DB_NAME = 'raven-db';
 const VERSION = 1;

@@ -1,6 +1,7 @@
-import { rStates } from "./constants.js";
-import { openModal } from "./modal.js";
+import { rStates } from "./utils/constants.js";
+import { openModal } from "./widgets/modal.js";
 import { isManual, isRecording, isReplaying, ravenLog, removeSession, setRavenState } from "./settings.js";
+import { recordEvent, replayEvent, snapshotEvent } from "./utils/ravents.js";
 
 (function () {
     if (isManual()) {
@@ -8,29 +9,29 @@ import { isManual, isRecording, isReplaying, ravenLog, removeSession, setRavenSt
             // Ctrl + Shift + R => Record
             if (e.ctrlKey && e.shiftKey && e.key === 'R') {
                 e.preventDefault();
-                if (isRecording()) {
-                    snapshot()
-                } else {
-                    record()
-                }
+                recordEvent();
             }
             // Ctrl + Shift + D => Demo
             if (e.ctrlKey && e.shiftKey && e.key === 'D') {
                 e.preventDefault();
-                if (isReplaying()) {
-                    removeSession();
-                    setRavenState(rStates.PASSIVE)
-                } else {
-                    setRavenState(rStates.REPLAY)
-                }
-                window.location.reload()
+                replayEvent();
             }
         });
-        window.addEventListener("recording:start", () => {
-            record();
+        window.addEventListener("raven:record", () => {
+            if (isRecording()) {
+                snapshot();
+            } else {
+                record();
+            }
         })
-        window.addEventListener("recording:stop", () => {
-            snapshot();
+        window.addEventListener("raven:replay", () => {
+            if (isReplaying()) {
+                removeSession();
+                setRavenState(rStates.PASSIVE)
+            } else {
+                setRavenState(rStates.REPLAY)
+            }
+            window.location.reload()
         })
         const record = () => {
             removeSession()
@@ -42,11 +43,7 @@ import { isManual, isRecording, isReplaying, ravenLog, removeSession, setRavenSt
             setRavenState(rStates.PASSIVE)
             openModal((payload) => {
                 ravenLog("submit : ", payload)
-                window.dispatchEvent(
-                    new CustomEvent('snapshot', {
-                        detail: payload
-                    })
-                );
+                snapshotEvent(payload)
             });
         }
     }

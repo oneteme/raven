@@ -20,15 +20,22 @@ export function fetchJson(path) {
         fetch(path).then(response => response.json()).then(json => {
             res(json)
         }).catch(err => {
-            rej("Error fetching json with path : ", path, " ERROR => ", err )
+            rej("Error fetching json with path : ", path, " ERROR => ", err)
         })
     })
 }
+
 // WIDGETS
-export function createDownloadButton(classname, fn = null) {
+export function createIconBtn(classname, icon, fn = null) {
     const button = document.createElement('div');
     button.className = classname;
-
+    button.appendChild(icon);
+    if (fn) {
+        button.onclick = fn;
+    }
+    return button;
+}
+export function createDownloadBtn(classname, fn = null) {
     // Create SVG icon for download all
     const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     icon.setAttribute('viewBox', '0 0 24 24');
@@ -37,19 +44,22 @@ export function createDownloadButton(classname, fn = null) {
     path.setAttribute('d', 'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z');
 
     icon.appendChild(path);
-    button.appendChild(icon);
-    if (fn) {
-        button.onclick = fn;
-    }
+    const button = createIconBtn(classname, icon, fn);
     return button;
 }
-export function createTextButton(className, textContent, textClass = null, fn = null) {
-    const buttonContent = document.createElement('div'),
-        buttonText = document.createElement('div');
+export function createTextBtn(className, textContent, textClass = null, fn = null) {
+    const buttonContent = document.createElement('div');
     buttonContent.className = className;
-    buttonText.className = textClass ?? className + "-text";
-    buttonText.textContent = textContent;
-    buttonContent.appendChild(buttonText);
+
+    if (textClass) {
+        const buttonText = document.createElement('div');
+        buttonText.className = textClass;
+        buttonText.textContent = textContent;
+        buttonContent.appendChild(buttonText);
+    } else {
+        buttonContent.textContent = textContent
+    }
+
     if (fn) {
         buttonContent.onclick = fn;
     }
