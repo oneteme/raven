@@ -59,7 +59,7 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./set
     function applyXHR(fn, msg = "New XHR") {
         window.XMLHttpRequest = function () {
             const xhr = new OriginalXHR();
-            openXHR(xhr)
+            openXHR(xhr);
             return fn(xhr);
         }
     }

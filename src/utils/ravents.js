@@ -1,7 +1,8 @@
 import { ravenLog } from "../settings";
 
 const eventTarget = new EventTarget(),
-    DEMO = "raven:demo", REPLAY = "raven:replay", RECORD = "raven:record", SNAPSHOT = "raven:snapshot", LOG = "raven:log";
+    DEMO = "raven:demo", REPLAY = "raven:replay", RECORD = "raven:record", SNAPSHOT = "raven:snapshot", LOG = "raven:log",
+    TOGGLE = "raven:toggle";
 function raventDispatch(event, payload = null) {
     ravenLog("[RAVEN EVENTS DISPATCHER]", event);
     eventTarget.dispatchEvent(new CustomEvent(event, { detail: payload }));
@@ -49,6 +50,14 @@ export function demoListener(fn) {
 
 export function demoEvent(sessionData) {
     raventDispatch(DEMO, { sessionData })
+}
+
+// **** RAVEN WIDGETS **** //
+export function toggleEvent(panelHideTimer) {
+    raventDispatch(TOGGLE, { panelHideTimer })
+}
+export function toggleListener(fn) {
+    raventListener(TOGGLE, fn)
 }
 
 

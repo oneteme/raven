@@ -6,8 +6,9 @@ import "./widgets/modal.js";
 import "./widgets/raven-logs.js";
 import { getImportedFiles, getSession, isAuto, isEnabled, isManual, isOnSession, isReplaying, ravenLog, setRavenSession } from "./settings.js";
 import { createDownloadBtn, displayNextSiblings, downloadJson, fetchJson, generateJsonName } from "./utils/raven-utils.js";
-import { appendExamplesOptions, createDownloadAllBtn, createImportBtn, demoNav, examplesContainer, indicator, panel, setMode, setState } from "./widgets/raven-panel.js";
+import { indicator, panel, setMode, setState } from "./widgets/panel/raven-panel.js";
 import { demoEvent, logEvent } from "./utils/ravents.js";
+import { demoNav, examplesContainer } from "./widgets/panel/replay.js";
 
 // CREATE WIDGETS 
 const container = document.createElement('div');

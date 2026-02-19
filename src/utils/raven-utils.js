@@ -25,6 +25,17 @@ export function fetchJson(path) {
     })
 }
 
+export function detectNavigation(fn, detectionFrequency = 200) {
+    let last = location.href;
+    ravenLog("detectNavigation")
+    setInterval(() => {
+        if (location.href !== last) {
+            last = location.href;
+            fn()
+        }
+    }, detectionFrequency);
+}
+
 // WIDGETS
 export function createIconBtn(classname, icon, fn = null) {
     const button = document.createElement('div');
