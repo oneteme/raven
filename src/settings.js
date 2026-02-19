@@ -69,6 +69,10 @@ export function isRecording() {
     return isManual() && ravenParams.state == rStates.RECORD
 }
 
+export function isOnSession() {
+    return !Number.isNaN(getSession()) && getSession() > 0;
+}
+
 export function isReplaying() {
     return ravenParams.state == rStates.REPLAY
 }

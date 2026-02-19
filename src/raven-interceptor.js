@@ -1,6 +1,6 @@
 import { getRequestbyRouteRequest, getRouteBySessionUrl, insertSession } from "./db/raven-dao";
 import { downloadJson, generateJsonName } from "./utils/raven-utils";
-import { logEvent } from "./utils/ravents";
+import { logEvent, snapshotEvent } from "./utils/ravents";
 import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./settings";
 (function () {
     let navigations = {};
@@ -151,7 +151,7 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./set
         });
         return xhr;
     }
-    addEventListener("snapshot", (e) => {
+    snapshotEvent((e) => {
         const recordedSession = {
             "title": e.detail.title,
             "description": e.detail.description,
@@ -165,5 +165,5 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./set
             }
             window.location.reload()
         })
-    });
+    })
 })();

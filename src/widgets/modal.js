@@ -210,10 +210,7 @@ function createEvents() {
   });
 
   cancelButton.onclick = () => {
-    if (confirm('Are you sure to discard your save?')) {
-      closeModal();
-      window.location.reload();
-    }
+    closeModal();
   };
 
   saveButton.onclick = () => {
@@ -293,9 +290,6 @@ let modalSubmit = null;
 export function openModal(onSubmit) {
   modalSubmit = onSubmit;
 
-  loadCategories();
-  updateCategoryUI();
-
   titleInput.value = '';
   descTextarea.value = '';
   checkbox.checked = false;
@@ -323,3 +317,5 @@ modal.append(
 
 overlay.appendChild(modal);
 document.body.appendChild(overlay);
+loadCategories();
+updateCategoryUI();

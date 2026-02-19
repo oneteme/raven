@@ -30,12 +30,18 @@ const sessionName = SCHEMAS.SESSION.name,
 function openRavenDB() {
     return openDB(DB_NAME, VERSION)
 }
+
 // -----------------------------
 // SESSION FUNCTIONS
 // -----------------------------
 export function getAllSessions() {
     return QUERIES.list(openRavenDB, sessionName);
 }
+
+export function getSessionById(id) {
+    return QUERIES.getById(openRavenDB, sessionName, id)
+}
+
 export function insertSession(metaData, categoryId = null) {
     let session = { title: metaData.title, description: metaData.description, category: Number.isNaN(categoryId) ? null : Number.parseInt(categoryId) }
     return new Promise((res, rej) => {
@@ -54,6 +60,7 @@ export function insertSession(metaData, categoryId = null) {
         })
     })
 }
+
 function insertSessionRoutes(routesStore, requestsStore, routes, sessionId) {
     for (const route of Object.keys(routes)) {
         const { title: routeTitle, ...requests } = routes[route];
@@ -65,7 +72,8 @@ function insertSessionRoutes(routesStore, requestsStore, routes, sessionId) {
             }
         }
     }
-};
+}
+
 export function exportSession(session) {
     let navigations = {},
         exportedData = {
@@ -88,7 +96,7 @@ export function exportSession(session) {
                     const routeCur = evnRoute.target.result;
                     if (routeCur) {
                         const route = routeCur.value;
-                        navigations[route.route] = {}
+                        navigations[route.route] = { "title": route.title ?? null }
                         let requestsCursor = requestindex.openCursor(IDBKeyRange.only(route.id));
                         requestsCursor.onsuccess = (evnReq) => {
                             const reqCur = evnReq.target.result;
@@ -112,6 +120,7 @@ export function exportSession(session) {
         })
     })
 }
+
 // -----------------------------
 // CATEGORIES FUNCTIONS
 // -----------------------------
@@ -127,6 +136,7 @@ export function insertCategory(name) {
         })
     })
 }
+
 export function insertNonExistantCategory(name) {
     return new Promise(res => {
         if (name) {
@@ -142,16 +152,20 @@ export function insertNonExistantCategory(name) {
         }
     })
 }
+
 export function getAllCategories() {
     return QUERIES.list(openRavenDB, categoryName)
 }
+
 export function getCategoryById(categoryId) {
     return QUERIES.getById(openRavenDB, categoryName, categoryId);
 }
+
 export function getCategoryByName(name) {
     ravenLog("category ", name)
     return QUERIES.getByIndex(openRavenDB, categoryName, 'by_name', name);
 }
+
 export function getCategoryNameFromSession(session) {
     return new Promise(res => {
         getCategoryById(session.category).then(category => {
@@ -161,6 +175,7 @@ export function getCategoryNameFromSession(session) {
         })
     })
 }
+
 // -----------------------------
 // ROUTES FUNCTIONS
 // -----------------------------
@@ -168,10 +183,12 @@ export function getRouteBySessionId(sessionId) {
     ravenLog("getRouteBySession -> session : ", sessionId)
     return QUERIES.getByIndex(openRavenDB, routeName, 'by_session', sessionId);
 }
+
 export function getAllRoutesBySessionId(sessionId) {
     ravenLog("getAllRoutesBySessionId -> session : ", sessionId)
     return QUERIES.getAllByIndex(openRavenDB, routeName, 'by_session', sessionId);
 }
+
 export function getRouteBySessionUrl(sessionId, url) {
     ravenLog("getRouteBySessionUrl -> session : ", sessionId, " url : ", url)
     return QUERIES.getByIndex(openRavenDB, routeName, 'by_session_url', sessionId, url);

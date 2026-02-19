@@ -1,17 +1,17 @@
 import { createIconBtn, createJsonFileInput, createTextBtn } from "../utils/raven-utils";
-import { recordEvent } from "../utils/ravents";
-import { getMode, getState, isManual, isRecording, isReplaying } from "../settings";
+import { demoListener, recordEvent, replayEvent } from "../utils/ravents";
+import { getMode, getState, isManual, isRecording, isReplaying, ravenLog } from "../settings";
 
 let
     panelHoverTimeOut,
     panelHideTimer = 600,
     showExamples = false,
-    navigationInterval,
     pages = new Set();
 
 export const indicator = createIndicator(),
-    panel = createPanel(),
     modeHeader = createModeHeader(),
+    panel = createPanel(),
+    demoNav = createDemoNav(),
     examplesContainer = createExamplesContainer();
 
 const toggleButton = createToggleButton(),
@@ -62,6 +62,7 @@ function createIndicator() {
 
     return indicator;
 }
+
 function createModeHeader() {
     const header = document.createElement('div');
     header.className = 'raven-mode-header raven-mode-header--manual';
@@ -90,7 +91,7 @@ function createPanel() {
             indicator.style.opacity = '1';
         }, panelHideTimer);
     });
-
+    panel.appendChild(modeHeader)
     return panel;
 }
 
@@ -138,6 +139,7 @@ function createRecordUrls() {
 }
 
 function addRecordedUrl(url, title = null) {
+    ravenLog("[ADD RECORDED URL]", url, title)
     if (!pages.has(url)) {
         pages.add(url)
         const urlItem = document.createElement('div');
@@ -184,7 +186,86 @@ function setPageCount(count) {
         counter.textContent = count;
     }
 }
+// DEMO NAVIGATION WIDGET
+function createDemoNav() {
+    const nav = document.createElement('div');
+    nav.className = 'raven-demo-nav';
 
+    // Header: session title + menu toggle btn
+    const header = document.createElement('div');
+    header.className = 'raven-demo-nav__header';
+
+    const sessionTitle = document.createElement('div');
+    sessionTitle.className = 'raven-demo-nav__session-title';
+
+    header.appendChild(sessionTitle);
+    if (isManual()) {
+        // Close button
+        header.appendChild(createTextBtn('raven-demo-nav__close-btn', 'Exit Demo', null, () => closeDemoNav()))
+    }
+    // Dropdown: all pages list
+    const dropdown = document.createElement('div');
+    dropdown.className = 'raven-demo-nav__dropdown';
+
+    nav.appendChild(header);
+    nav.appendChild(dropdown);
+
+    demoListener((e) => {
+        openDemoNav(e.detail.sessionData)
+    });
+
+    return nav;
+}
+
+function openDemoNav(sessionData) {
+    const { title, pages, currentPageIndex } = sessionData;
+
+    // Update session title
+    const sessionTitle = demoNav.querySelector('.raven-demo-nav__session-title');
+    sessionTitle.textContent = title || 'Demo Session';
+
+    detectNavigation(() => { updateDemoNavPage(pages, currentPageIndex) })
+    updateDemoNavPage(pages, currentPageIndex)
+    // Show widget
+    demoNav.classList.add('raven-demo-nav--visible');
+}
+
+function closeDemoNav() {
+    replayEvent();
+}
+
+function updateDemoNavPage(pages, currentPageIndex) {
+    const dropdown = demoNav.querySelector('.raven-demo-nav__dropdown');
+
+    // Populate dropdown
+    dropdown.innerHTML = '';
+    pages.forEach((page, index) => {
+        const item = document.createElement('div');
+        item.className = 'raven-demo-nav__dropdown-item';
+
+        if (window.location.href == page.route) {
+            item.classList.add('raven-demo-nav__dropdown-item--active');
+        }
+
+        const number = document.createElement('div');
+        number.className = 'raven-demo-nav__dropdown-number';
+        number.textContent = `${index + 1}`;
+
+        const title = document.createElement('div');
+        title.className = 'raven-demo-nav__dropdown-title';
+        title.textContent = page.title || `Page ${index + 1}`;
+
+        item.appendChild(number);
+        item.appendChild(title);
+
+        if (index !== currentPageIndex) {
+            item.addEventListener('click', () => {
+                window.location.href = page.route
+            });
+        }
+        dropdown.appendChild(item);
+    });
+}
 // SESSIONS CONTAINER
 function createExamplesContainer() {
     const examplesContainer = document.createElement('div');
@@ -248,7 +329,7 @@ export function setState() {
 }
 
 function startRecording() {
-    detectNavigation();
+    detectNavigation(() => { addRecordedUrl(location.hash, document.title) });
     panel.appendChild(recordBtn)
     panel.appendChild(recordedUrlsContainer);
     recordIcon.classList.add('raven-record-icon--recording');
@@ -259,24 +340,13 @@ function startRecording() {
     }, 1000);
 }
 
-function stopRecording() {
-    recordIcon.classList.remove('raven-record-icon--recording');
-    recordBtn.classList.remove('raven-record-button--recording');
-    urlsList.innerHTML = '';
-    setPageCount(0);
-    stopNavigationDetection();
-}
-
-function detectNavigation() {
+function detectNavigation(fn) {
     let last = location.href;
-    navigationInterval = setInterval(async () => {
+    ravenLog("detectNavigation")
+    setInterval(() => {
         if (location.href !== last) {
             last = location.href;
-            addRecordedUrl(location.hash, document.title)
+            fn()
         }
     }, 100);
-}
-
-function stopNavigationDetection() {
-    clearInterval(navigationInterval);
 }

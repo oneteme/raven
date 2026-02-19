@@ -81,6 +81,7 @@ export const QUERIES = {
         })
     },
     getById(openMethod, storeName, id) {
+        ravenLog("getting ", storeName, " By ID ", id)
         return new Promise((res, rej) => {
             openMethod().then(db => {
                 id = id && !Number.isNaN(id) ? id : -1

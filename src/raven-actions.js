@@ -1,7 +1,7 @@
 import { rStates } from "./utils/constants.js";
 import { openModal } from "./widgets/modal.js";
 import { isManual, isRecording, isReplaying, ravenLog, removeSession, setRavenState } from "./settings.js";
-import { recordEvent, replayEvent, snapshotEvent } from "./utils/ravents.js";
+import { recordEvent, recordListener, replayEvent, replayListener, snapshotEvent } from "./utils/ravents.js";
 
 (function () {
     if (isManual()) {
@@ -17,14 +17,14 @@ import { recordEvent, replayEvent, snapshotEvent } from "./utils/ravents.js";
                 replayEvent();
             }
         });
-        window.addEventListener("raven:record", () => {
+        recordListener(() => {
             if (isRecording()) {
                 snapshot();
             } else {
                 record();
             }
         })
-        window.addEventListener("raven:replay", () => {
+        replayListener(() => {
             if (isReplaying()) {
                 removeSession();
                 setRavenState(rStates.PASSIVE)
@@ -38,10 +38,9 @@ import { recordEvent, replayEvent, snapshotEvent } from "./utils/ravents.js";
             setRavenState(rStates.RECORD)
             window.location.reload()
         }
-
         const snapshot = () => {
-            setRavenState(rStates.PASSIVE)
             openModal((payload) => {
+                setRavenState(rStates.PASSIVE)
                 ravenLog("submit : ", payload)
                 snapshotEvent(payload)
             });

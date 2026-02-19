@@ -1,4 +1,5 @@
-import {  rLogs } from "../utils/constants";
+import { rLogs } from "../utils/constants";
+import { logListener } from "../utils/ravents";
 
 const toastsContainer = createToastsContainer(),
     rMessages = {
@@ -15,8 +16,7 @@ const toastsContainer = createToastsContainer(),
     };
 let logs = new Map();
 
-window.addEventListener("raven:log", (e) => {
-    console.log("adding RAVEN log", e.detail)
+logListener((e) => {
     showToastNotification(e.detail.code)
 });
 

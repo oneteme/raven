@@ -1,18 +1,18 @@
 import "./settings.js";
-import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, insertNonExistantCategory } from "./db/raven-dao.js";
+import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, insertNonExistantCategory, getSessionById, getAllRoutesBySessionId } from "./db/raven-dao.js";
 import "./raven-interceptor.js";
-import "./widgets/raven-demo.js";
 import "./raven-actions.js";
 import "./widgets/modal.js";
 import "./widgets/raven-logs.js";
-import { getImportedFiles, isAuto, isEnabled, isManual, ravenLog, setRavenSession } from "./settings.js";
+import { getImportedFiles, getSession, isAuto, isEnabled, isManual, isOnSession, isReplaying, ravenLog, setRavenSession } from "./settings.js";
 import { createDownloadBtn, displayNextSiblings, downloadJson, fetchJson, generateJsonName } from "./utils/raven-utils.js";
-import { appendExamplesOptions, createDownloadAllBtn, createImportBtn, examplesContainer, indicator, modeHeader, panel, setMode, setState } from "./widgets/raven-panel.js";
-import { logEvent } from "./utils/ravents.js";
+import { appendExamplesOptions, createDownloadAllBtn, createImportBtn, demoNav, examplesContainer, indicator, panel, setMode, setState } from "./widgets/raven-panel.js";
+import { demoEvent, logEvent } from "./utils/ravents.js";
 
 // CREATE WIDGETS 
 const container = document.createElement('div');
 container.className = 'raven-container';
+
 
 // SESSIONS FUNCITONS
 function exportSessions(sessions, index = 0, indexJson = { "dir": "", "files": [] }) {
@@ -207,9 +207,12 @@ function checkForEOF(files, index, dir, resolve) {
 
 // ASSEMBLE RAVEN
 function assembleDOM() {
-  panel.appendChild(modeHeader);
   setMode();
   setState();
+  if (isReplaying() && isOnSession()) {
+    panel.appendChild(demoNav)
+    loadDemoData().then(sessionData => { ravenLog("SessionData", sessionData); demoEvent(sessionData); }).catch(err => console.error(err))
+  }
   if (isManual()) {
     const downloadAllBtn = createDownloadAllBtn(() => {
       getAllSessions().then(sessions => {
@@ -234,7 +237,16 @@ function assembleDOM() {
   container.appendChild(panel);
   container.appendChild(indicator);
 }
-
+function loadDemoData() {
+  return new Promise((res, rej) => {
+    ravenLog("[loadDemoData]", "session ID ", getSession())
+    getSessionById(getSession()).then(session => {
+      getAllRoutesBySessionId(getSession()).then(routes => {
+        res({ title: session.title, pages: routes })
+      }).catch(err => rej("DEMO MODE : FAIL => " + err));
+    }).catch(err => rej("DEMO MODE : FAIL => " + err))
+  })
+}
 
 if (isEnabled()) {
   assembleDOM();
