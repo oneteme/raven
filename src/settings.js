@@ -3,11 +3,10 @@ import { rLocalStrg, rModes, rStates } from "./utils/constants.js";
 // SETUP RAVEN
 export const ravenParams = {
     mode: rModes.MANUAL,
-    state: rStates.PASSIVE,
+    state: rStates.INACTIVE,
     loadedSession: -1,
     isReplayMode: false,
     isRecordMode: false,
-    isEnabled: true,
     loadedFiles: null,
     debugMode: false
 }
@@ -64,6 +63,13 @@ export function isManual() {
 export function isEnabled() {
     return ravenParams.mode != rModes.DISABLED
 }
+export function isActivated() {
+    return ravenParams.state != rStates.INACTIVE
+}
+
+export function isPassive() {
+    return ravenParams.state == rStates.PASSIVE
+}
 
 export function isRecording() {
     return isManual() && ravenParams.state == rStates.RECORD
@@ -97,7 +103,7 @@ export function getImportedFiles() {
 
 export function setRavenState(state) {
     ravenLog("RAVEN SET STATE TO : ", state)
-    state = checkParamValue(state, rStates) ? state : rStates.PASSIVE;
+    state = checkParamValue(state, rStates) ? state : rStates.INACTIVE;
     setLocalValue(rLocalStrg.STATE, state)
     ravenParams.state = state
     ravenParams.isRecordMode = isRecording();
@@ -112,9 +118,6 @@ export function setRavenMode(mode) {
     switch (mode) {
         case rModes.AUTO:
             setRavenState(rStates.REPLAY)
-            break;
-        case rModes.DISABLED:
-            ravenParams.isEnabled = false;
             break;
     }
 }

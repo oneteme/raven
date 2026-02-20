@@ -5,6 +5,7 @@ export const rModes = {
 }
 
 export const rStates = {
+    INACTIVE: "inactivated",
     RECORD: "recording",
     REPLAY: "demo",
     PASSIVE: "passive"

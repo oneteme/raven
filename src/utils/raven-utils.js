@@ -39,15 +39,14 @@ export function detectNavigation(fn, detectionFrequency = 200) {
 }
 
 // WIDGETS
-export function createIconBtn(classname, icon, fn = null) {
-    const button = document.createElement('div');
-    button.className = classname;
-    button.appendChild(icon);
+export function createIconBtn(className, icon, fn = null) {
+    const button = createDiv(className, icon)
     if (fn) {
         button.onclick = fn;
     }
     return button;
 }
+
 export function createDownloadBtn(classname, fn = null) {
     // Create SVG icon for download all
     const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -60,10 +59,9 @@ export function createDownloadBtn(classname, fn = null) {
     const button = createIconBtn(classname, icon, fn);
     return button;
 }
-export function createTextBtn(className, textContent, textClass = null, fn = null) {
-    const buttonContent = document.createElement('div');
-    buttonContent.className = className;
 
+export function createTextBtn(className, textContent, textClass = null, fn = null) {
+    const buttonContent = createDiv(className)
     if (textClass) {
         const buttonText = document.createElement('div');
         buttonText.className = textClass;
@@ -78,6 +76,7 @@ export function createTextBtn(className, textContent, textClass = null, fn = nul
     }
     return buttonContent
 }
+
 export function createFileInput(accept = null, fn) {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -107,10 +106,12 @@ export function createFileInput(accept = null, fn) {
     }
     return fileInput
 }
+
 export function createJsonFileInput(fn) {
     const fileInput = createFileInput(".json", (e) => { const json = JSON.parse(e.target.result); fn(json) })
     return fileInput
 }
+
 export function displayNextSiblings(div, display = "none") {
     let next = div.nextElementSibling;
 
@@ -118,4 +119,13 @@ export function displayNextSiblings(div, display = "none") {
         next.style.display = display;
         next = next.nextElementSibling;
     }
+}
+
+export function createDiv(className, ...children) {
+    const div = document.createElement('div');
+    div.className = className;
+    for (let i = 0; i < children.length; i++) {
+        div.appendChild(children[i]);
+    }
+    return div;
 }

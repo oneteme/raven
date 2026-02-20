@@ -1,20 +1,32 @@
 import { rStates } from "./utils/constants.js";
 import { openModal } from "./widgets/modal.js";
-import { isManual, isRecording, isReplaying, ravenLog, removeSession, setRavenState } from "./settings.js";
+import { isActivated, isManual, isRecording, isReplaying, ravenLog, removeSession, setRavenState } from "./settings.js";
 import { recordEvent, recordListener, replayEvent, replayListener, snapshotEvent } from "./utils/ravents.js";
 
 (function () {
     if (isManual()) {
         window.addEventListener('keydown', function (e) {
-            // Ctrl + Shift + R => Record
-            if (e.ctrlKey && e.shiftKey && e.key === 'R') {
-                e.preventDefault();
-                recordEvent();
-            }
-            // Ctrl + Shift + D => Demo
-            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-                e.preventDefault();
-                replayEvent();
+            if (isActivated()) {
+                // Ctrl + Shift + R => Record
+                if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+                    e.preventDefault();
+                    recordEvent();
+                }
+                // Ctrl + Shift + D => Demo
+                if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                    e.preventDefault();
+                    replayEvent();
+                }
+                if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                    setRavenState(rStates.INACTIVE)
+                    window.location.reload();
+                }
+            } else {
+                if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                    e.preventDefault();
+                    setRavenState(rStates.PASSIVE)
+                    window.location.reload();
+                }
             }
         });
         recordListener(() => {
@@ -23,7 +35,7 @@ import { recordEvent, recordListener, replayEvent, replayListener, snapshotEvent
             } else {
                 record();
             }
-        })
+        });
         replayListener(() => {
             if (isReplaying()) {
                 removeSession();
@@ -31,8 +43,8 @@ import { recordEvent, recordListener, replayEvent, replayListener, snapshotEvent
             } else {
                 setRavenState(rStates.REPLAY)
             }
-            window.location.reload()
-        })
+            window.location.reload();
+        });
         const record = () => {
             removeSession()
             setRavenState(rStates.RECORD)
@@ -45,5 +57,6 @@ import { recordEvent, recordListener, replayEvent, replayListener, snapshotEvent
                 snapshotEvent(payload)
             });
         }
+
     }
 })();

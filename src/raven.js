@@ -4,11 +4,12 @@ import "./raven-interceptor.js";
 import "./raven-actions.js";
 import "./widgets/modal.js";
 import "./widgets/raven-logs.js";
-import { getImportedFiles, getSession, isAuto, isEnabled, isManual, isOnSession, isReplaying, ravenLog, setRavenSession } from "./settings.js";
+import { getImportedFiles, getSession, isActivated, isAuto, isEnabled, isManual, isOnSession, isPassive, isReplaying, ravenLog, setRavenSession } from "./settings.js";
 import { createDownloadBtn, displayNextSiblings, downloadJson, fetchJson, generateJsonName } from "./utils/raven-utils.js";
 import { indicator, panel, setMode, setState } from "./widgets/panel/raven-panel.js";
 import { demoEvent, logEvent } from "./utils/ravents.js";
 import { appendExamplesOptions, createDownloadAllBtn, createImportBtn, demoNav, examplesContainer } from "./widgets/panel/replay.js";
+import { modeMenu } from "./widgets/panel/menu.js";
 
 // CREATE WIDGETS 
 const container = document.createElement('div');
@@ -209,31 +210,38 @@ function checkForEOF(files, index, dir, resolve) {
 // ASSEMBLE RAVEN
 function assembleDOM() {
   setMode();
-  setState();
-  if (isReplaying() && isOnSession()) {
-    panel.appendChild(demoNav)
-    loadDemoData().then(sessionData => { ravenLog("SessionData", sessionData); demoEvent(sessionData); }).catch(err => console.error(err))
-  }
-  if (isManual()) {
-    const downloadAllBtn = createDownloadAllBtn(() => {
-      getAllSessions().then(sessions => {
-        exportSessions(sessions);
-        logEvent(100)
-      })
-        .catch(err => {
-          logEvent(50)
-          console.error("[RAVEN DOWNLOAD ALL]", err)
+  // setState();
+
+  if (isPassive()) {
+    panel.appendChild(modeMenu) 
+  } else {
+    if (isReplaying() && isOnSession()) {
+      panel.appendChild(demoNav)
+      loadDemoData().then(sessionData => { ravenLog("SessionData", sessionData); demoEvent(sessionData); }).catch(err => console.error(err))
+    }
+
+    if (isManual()) {
+      const downloadAllBtn = createDownloadAllBtn(() => {
+        getAllSessions().then(sessions => {
+          exportSessions(sessions);
+          logEvent(100)
         })
-    }),
-      importBtn = createImportBtn((json) => {
-        insertImportedSession(json).then(session => {
-          createSession(session)
-          logEvent(101)
-        }).catch(err => {
-          logEvent(40)
-        })
-      });
-    appendExamplesOptions([downloadAllBtn, importBtn])
+          .catch(err => {
+            logEvent(50)
+            console.error("[RAVEN DOWNLOAD ALL]", err)
+          })
+      }),
+        importBtn = createImportBtn((json) => {
+          insertImportedSession(json).then(session => {
+            createSession(session)
+            logEvent(101)
+          }).catch(err => {
+            logEvent(40)
+          })
+        });
+      appendExamplesOptions([downloadAllBtn, importBtn])
+    }
+
   }
   container.appendChild(panel);
   container.appendChild(indicator);
@@ -249,7 +257,7 @@ function loadDemoData() {
   })
 }
 
-if (isEnabled()) {
+if (isEnabled() && isActivated()) {
   assembleDOM();
   assembleSessions();
   document.body.appendChild(container);

@@ -7,15 +7,14 @@ let panelHoverTimeOut,
     panelHideTimer = 600,
     pages = new Set();
 
-export const indicator = createIndicator(),
-    modeHeader = createModeHeader(),
-    panel = createPanel();
-
 const recordIcon = createRecordIcon(),
     recordBtn = createIconBtn('raven-record-button', recordIcon, () => recordEvent()),
     urlsList = createRecordUrlsList(),
     recordedUrlsContainer = createRecordUrls();
 
+export const indicator = createIndicator(),
+    modeHeader = createModeHeader(),
+    panel = createPanel();
 
 // EVENTS
 toggleListener((e) => panelHideTimer = e.detail.panelHideTimer);
@@ -83,13 +82,14 @@ function createPanel() {
     });
 
     // Hide panel when leaving both indicator and panel
-    panel.addEventListener('mouseleave', () => {
-        panelHoverTimeOut = setTimeout(() => {
-            panel.classList.remove('raven-panel--visible');
-            panel.classList.add('raven-panel--hidden');
-            indicator.style.opacity = '1';
-        }, panelHideTimer);
-    });
+    // panel.addEventListener('mouseleave', () => {
+    //     panelHoverTimeOut = setTimeout(() => {
+    //         panel.classList.remove('raven-panel--visible');
+    //         panel.classList.add('raven-panel--hidden');
+    //         indicator.style.opacity = '1';
+    //     }, panelHideTimer);
+    // });
+    // panel.appendChild(recordPill)
     panel.appendChild(modeHeader)
     return panel;
 }
