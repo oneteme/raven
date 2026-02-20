@@ -1,5 +1,5 @@
 import { isManual } from "../../settings";
-import { createTextBtn, detectNavigation } from "../../utils/raven-utils";
+import { createJsonFileInput, createTextBtn, detectNavigation } from "../../utils/raven-utils";
 import { demoListener, replayEvent, toggleEvent } from "../../utils/ravents";
 
 let showExamples = false;
@@ -102,7 +102,7 @@ export function appendExamplesOptions(options = []) {
 }
 
 export function createDownloadAllBtn(fn) {
-    return createTextBtn('raven-button raven-download-all-content', 'Download All', 'raven-button-text', fn)
+    return createTextBtn('raven-button raven-download-all-content', 'Download All', 'raven-button-text', fn);
 }
 
 export function createImportBtn(fn) {

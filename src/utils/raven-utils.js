@@ -1,3 +1,5 @@
+import { ravenLog } from "../settings";
+
 export function downloadJson(json, filename = 'cache.json') {
     const blob = new Blob(
         [JSON.stringify(json, null, 2)],
