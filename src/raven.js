@@ -1,5 +1,5 @@
 import "./settings.js";
-import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, insertNonExistantCategory, getSessionById, getAllRoutesBySessionId } from "./db/raven-dao.js";
+import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, insertNonExistantCategory, getSessionById, getAllRoutesBySessionId, loadDemoData } from "./db/raven-dao.js";
 import "./raven-interceptor.js";
 import "./raven-actions.js";
 import "./widgets/modal.js";
@@ -209,53 +209,35 @@ function checkForEOF(files, index, dir, resolve) {
 
 // ASSEMBLE RAVEN
 function assembleDOM() {
-  setMode();
-  // setState();
-
-  if (isPassive()) {
-    panel.appendChild(modeMenu) 
-  } else {
-    if (isReplaying() && isOnSession()) {
-      panel.appendChild(demoNav)
-      loadDemoData().then(sessionData => { ravenLog("SessionData", sessionData); demoEvent(sessionData); }).catch(err => console.error(err))
-    }
-
-    if (isManual()) {
-      const downloadAllBtn = createDownloadAllBtn(() => {
-        getAllSessions().then(sessions => {
-          exportSessions(sessions);
-          logEvent(100)
+  if (isReplaying() && isOnSession()) {
+    panel.appendChild(demoNav)
+    loadDemoData(getSession()).then(sessionData => { ravenLog("SessionData", sessionData); demoEvent(sessionData); }).catch(err => console.error(err))
+  }
+  if (isManual()) {
+    const downloadAllBtn = createDownloadAllBtn(() => {
+      getAllSessions().then(sessions => {
+        exportSessions(sessions);
+        logEvent(100)
+      })
+        .catch(err => {
+          logEvent(50)
+          console.error("[RAVEN DOWNLOAD ALL]", err)
         })
-          .catch(err => {
-            logEvent(50)
-            console.error("[RAVEN DOWNLOAD ALL]", err)
-          })
-      }),
-        importBtn = createImportBtn((json) => {
-          insertImportedSession(json).then(session => {
-            createSession(session)
-            logEvent(101)
-          }).catch(err => {
-            logEvent(40)
-          })
-        });
-      appendExamplesOptions([downloadAllBtn, importBtn])
-    }
-
+    }),
+      importBtn = createImportBtn((json) => {
+        insertImportedSession(json).then(session => {
+          createSession(session)
+          logEvent(101)
+        }).catch(err => {
+          logEvent(40)
+        })
+      });
+    appendExamplesOptions([downloadAllBtn, importBtn])
   }
   container.appendChild(panel);
   container.appendChild(indicator);
 }
-function loadDemoData() {
-  return new Promise((res, rej) => {
-    ravenLog("[loadDemoData]", "session ID ", getSession())
-    getSessionById(getSession()).then(session => {
-      getAllRoutesBySessionId(getSession()).then(routes => {
-        res({ title: session.title, pages: routes })
-      }).catch(err => rej("DEMO MODE : FAIL => " + err));
-    }).catch(err => rej("DEMO MODE : FAIL => " + err))
-  })
-}
+
 
 if (isEnabled() && isActivated()) {
   assembleDOM();

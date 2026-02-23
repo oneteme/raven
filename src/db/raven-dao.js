@@ -121,6 +121,16 @@ export function exportSession(session) {
     })
 }
 
+export function loadDemoData(sessionId) {
+    return new Promise((res, rej) => {
+        ravenLog("[loadDemoData]", "session ID ", sessionId)
+        getSessionById(sessionId).then(session => {
+            getAllRoutesBySessionId(sessionId).then(routes => {
+                res({ title: session.title, pages: routes })
+            }).catch(err => rej("DEMO MODE : FAIL => " + err));
+        }).catch(err => rej("DEMO MODE : FAIL => " + err))
+    })
+}
 // -----------------------------
 // CATEGORIES FUNCTIONS
 // -----------------------------

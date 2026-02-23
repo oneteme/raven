@@ -1,7 +1,8 @@
 import { createIconBtn, detectNavigation } from "../../utils/raven-utils";
 import { recordEvent, toggleListener } from "../../utils/ravents";
-import { getMode, getState, isManual, isRecording, isReplaying, ravenLog } from "../../settings";
+import { getMode, getState, isManual, isOnSession, isPassive, isRecording, isReplaying, ravenLog } from "../../settings";
 import { examplesContainer, toggleButton } from "./replay";
+import { modeMenu } from "./menu";
 
 let panelHoverTimeOut,
     panelHideTimer = 600,
@@ -188,21 +189,23 @@ export function setState() {
     const topText = indicator.querySelector('.raven-indicator__top-text');
     const bottomText = indicator.querySelector('.raven-indicator__bottom-text');
 
-    if (isRecording()) {
+    if (isPassive()) {
+        topText.textContent = 'RAVEN';
+        bottomText.textContent = 'AVEN';
+        panel.appendChild(modeMenu)
+    } else if (isRecording()) {
         topText.textContent = 'AVEN';
         bottomText.textContent = 'ECORD';
         startRecording();
     } else if (isReplaying()) {
         topText.textContent = 'AVEN';
         bottomText.textContent = 'EPLAY';
-        panel.appendChild(toggleButton);
-        panel.appendChild(examplesContainer);
-    } else {
-        topText.textContent = 'RAVEN';
-        bottomText.textContent = 'AVEN';
-        panel.appendChild(recordBtn)
-        panel.appendChild(toggleButton);
-        panel.appendChild(examplesContainer);
+        if (isOnSession()) {
+
+        } else {
+            panel.appendChild(toggleButton);
+            panel.appendChild(examplesContainer);
+        }
     }
 }
 
@@ -217,4 +220,7 @@ function startRecording() {
         addRecordedUrl(location.hash, document.title)
     }, 1000);
 }
+
+setMode();
+setState();
 
