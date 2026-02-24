@@ -52,7 +52,7 @@ function createIndicator() {
     indicator.addEventListener('mouseenter', () => {
         panel.classList.add('raven-panel--visible');
         panel.classList.remove('raven-panel--hidden');
-        indicator.style.opacity = '0';
+        indicator.style.display = 'none';
     });
 
     return indicator;
@@ -78,14 +78,14 @@ function createPanel() {
     });
 
     // Hide panel when leaving both indicator and panel
-    // panel.addEventListener('mouseleave', () => {
-    //     panelHoverTimeOut = setTimeout(() => {
-    //         panel.classList.remove('raven-panel--visible');
-    //         panel.classList.add('raven-panel--hidden');
-    //         indicator.style.display = 'flex';
-    //         indicator.style.opacity = '1';
-    //     }, panelHideTimer);
-    // });
+    panel.addEventListener('mouseleave', () => {
+        panelHoverTimeOut = setTimeout(() => {
+            panel.classList.remove('raven-panel--visible');
+            panel.classList.add('raven-panel--hidden');
+            indicator.style.display = 'flex';
+            indicator.style.opacity = '1';
+        }, panelHideTimer);
+    });
     // panel.appendChild(recordPill)
     panel.appendChild(modeHeader)
     return panel;
