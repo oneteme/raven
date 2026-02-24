@@ -1,8 +1,11 @@
-import { createDiv, createIconBtn, createTextBtn } from "../../utils/raven-utils";
+import { recordEvent, replayEvent } from "../../utils/ravents";
+import { createButtonLabelContainer, createDiv, createIconBtn, createRecordIcon, createReplayIcon } from "../../utils/widgets";
 
 
-const recordPill = createPill('record-pill', '#cc1111', createIconBtn('raven-record-button', createDiv('raven-record-icon'), () => recordEvent()), "Record", 45),
-    demoPill = createPill('replay-pill', '#0c94dd', createIconBtn('raven-record-button', createDiv('raven-record-icon'), () => recordEvent()), "Replay", -45)
+const recordBtn = createIconBtn('raven-action-button record', createRecordIcon(), () => recordEvent()),
+    replayBtn = createIconBtn('raven-action-button replay', createReplayIcon(), () => replayEvent()),
+    recordContainer = createButtonLabelContainer('choice-container', recordBtn, "Record", "#e53935"),
+    demoContainer = createButtonLabelContainer('choice-container', replayBtn, "Replay", "#00a8ff");
 export const modeMenu = createMenuContainer();
 
 function createPill(className, color, contentEl, label, rotation = 0) {
@@ -39,6 +42,6 @@ function createPill(className, color, contentEl, label, rotation = 0) {
 };
 
 function createMenuContainer() {
-    const menu = createDiv("menu-container", demoPill, recordPill);
+    const menu = createDiv("menu-container", demoContainer, recordContainer);
     return menu;
 }

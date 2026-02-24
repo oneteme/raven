@@ -1,6 +1,7 @@
 import { isManual } from "../../settings";
-import { createJsonFileInput, createTextBtn, detectNavigation } from "../../utils/raven-utils";
+import { detectNavigation } from "../../utils/raven-utils";
 import { demoListener, replayEvent, toggleEvent } from "../../utils/ravents";
+import { createJsonFileInput, createTextBtn } from "../../utils/widgets";
 
 let showExamples = false;
 export const demoNav = createDemoNav(),

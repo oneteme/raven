@@ -18,6 +18,7 @@ import { recordEvent, recordListener, replayEvent, replayListener, snapshotEvent
                     replayEvent();
                 }
                 if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                    e.preventDefault();
                     setRavenState(rStates.INACTIVE)
                     window.location.reload();
                 }

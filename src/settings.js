@@ -63,6 +63,7 @@ export function isManual() {
 export function isEnabled() {
     return ravenParams.mode != rModes.DISABLED
 }
+
 export function isActivated() {
     return ravenParams.state != rStates.INACTIVE
 }
