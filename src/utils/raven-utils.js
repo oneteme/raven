@@ -1,5 +1,9 @@
 import { ravenLog } from "../settings";
 
+export function reloadPage() {
+    window.location.reload();
+}
+
 export function downloadJson(json, filename = 'cache.json') {
     const blob = new Blob(
         [JSON.stringify(json, null, 2)],
@@ -37,4 +41,6 @@ export function detectNavigation(fn, detectionFrequency = 200) {
         }
     }, detectionFrequency);
 }
+
+
 

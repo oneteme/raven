@@ -1,15 +1,15 @@
 import "./settings.js";
-import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, insertNonExistantCategory, getSessionById, getAllRoutesBySessionId } from "./db/raven-dao.js";
+import { getRouteBySessionId, getAllSessions, insertSession, exportSession, getCategoryById, insertNonExistantCategory, getSessionById, getAllRoutesBySessionId, exportSessionById } from "./db/raven-dao.js";
 import "./raven-interceptor.js";
 import "./raven-actions.js";
 import "./widgets/modal.js";
 import "./widgets/raven-logs.js";
-import { getImportedFiles, getSession, isActivated, isAuto, isEnabled, isManual, isOnSession, isRecording, isReplaying, ravenLog, setRavenSession, setRavenState } from "./settings.js";
-import { downloadJson, fetchJson, generateJsonName } from "./utils/raven-utils.js";
-import { indicator, panel } from "./widgets/panel/raven-panel.js";
-import { demoEvent, recordEvent } from "./utils/ravents.js";
-import { demoNav, examplesContainer } from "./widgets/panel/replay.js";
-import { createDiv, createDownloadBtn, createOptionsContainer, createTextBtn, displayNextSiblings } from "./utils/widgets.js";
+import { getImportedFiles, getSession, isActivated, isAuto, isEnabled, isManual, isOnSession, isPassive, isRecording, isReplaying, ravenLog, removeSession, setRavenSession, setRavenState } from "./settings.js";
+import { downloadJson, fetchJson, generateJsonName, reloadPage } from "./utils/raven-utils.js";
+import { indicator, panel, setHeaderText } from "./widgets/panel/raven-panel.js";
+import { demoEvent, logEvent, recordEvent, replayEvent } from "./utils/ravents.js";
+import { emptyStateContainer, examplesContainer } from "./widgets/panel/replay.js";
+import { createDiv, createDownloadBtn, createJsonZoneFileInput, createOptionsContainer, createTextBtn, displayNextSiblings } from "./utils/widgets.js";
 import { rStates } from "./utils/constants.js";
 
 // CREATE WIDGETS 
@@ -38,14 +38,14 @@ function exportSessions(sessions, index = 0, indexJson = { "dir": "", "files": [
 }
 
 function assembleSessions() {
+  ravenLog("SESSION ASSEMBLE");
   loadSessions().then(() => {
     getAllSessions().then(sessions => {
-      if (sessions.length > 0) {
-        ravenLog("sessions : ", sessions)
-        sessions.map(createSession)
-      }
-
+      ravenLog("sessions : ", sessions)
+      sessions.map(createSession)
       // examplesContainer.appendChild(sessions);
+    }).catch(err => {
+      examplesContainer.appendChild(emptyStateContainer)
     })
   })
 
@@ -100,7 +100,7 @@ function createSession(session) {
         setRavenSession(session.id)
         setTimeout(() => {
           window.location.href = sessionRoute.route;
-          window.location.reload()
+          reloadPage()
         }, 200);
       } else {
         ravenLog("route not found")
@@ -122,6 +122,35 @@ function createSession(session) {
   return item
 }
 
+function exportAndDownloadAllSessions() {
+  getAllSessions().then(sessions => {
+    exportSessions(sessions);
+  }).catch(err => {
+    logEvent(50)
+  })
+}
+
+function exportAndDownloadSession(session) {
+  exportSession(session).then(exportedJson => {
+    const jsonName = generateJsonName(exportedJson.title);
+    downloadJson(exportedJson, jsonName);
+    res(exportedJson);
+  }).catch(err => {
+    rej("exportAndDownloadSession -> ERROR : " + err)
+  })
+}
+
+function exportAndDownloadSessionById(sessionId) {
+  return new Promise((res, rej) => {
+    exportSessionById(sessionId).then(exportedJson => {
+      const jsonName = generateJsonName(exportedJson.title);
+      downloadJson(exportedJson, jsonName);
+      res(exportedJson);
+    }).catch(err => {
+      rej("exportAndDownloadSessionById -> ERROR : " + err)
+    })
+  })
+}
 function setupSessionCategory(categoryName) {
   return new Promise(res => {
     let div = document.querySelector(`[category="${categoryName}"]`);
@@ -212,6 +241,7 @@ function loadDemoData() {
   return new Promise((res, rej) => {
     ravenLog("[loadDemoData]", "session ID ", getSession())
     getSessionById(getSession()).then(session => {
+      setHeaderText(session.title);
       getAllRoutesBySessionId(getSession()).then(routes => {
         res({ title: session.title, pages: routes })
       }).catch(err => rej("DEMO MODE : FAIL => " + err));
@@ -220,18 +250,45 @@ function loadDemoData() {
 }
 // ASSEMBLE RAVEN
 function assembleDOM() {
-  if (isReplaying() && isOnSession()) {
-    panel.appendChild(demoNav)
-    loadDemoData().then(sessionData => { ravenLog("SessionData", sessionData); demoEvent(sessionData); }).catch(err => console.error(err))
+  if (isPassive()) {
+    panel.appendChild(createJsonZoneFileInput((json) => {
+      insertImportedSession(json).then(session => {
+        createSession(session)
+        logEvent(101)
+      }).catch(err => {
+        logEvent(40)
+      })
+    }))
   } else if (isRecording()) {
+    setHeaderText("Recording session...");
     const abandonBtn = createTextBtn('raven-button error', "Abandon", "raven-button-text", () => {
       if (confirm("Discard this navigation?")) {
         setRavenState(rStates.PASSIVE);
-        window.location.reload();
+        reloadPage();
       }
     }),
-      stopBtn = createTextBtn('raven-button info', "Save", "raven-button-text", () => recordEvent())
-    panel.append(createOptionsContainer(abandonBtn, stopBtn))
+      stopBtn = createTextBtn('raven-button info', "Save", "raven-button-text", () => recordEvent());
+    panel.append(createOptionsContainer(abandonBtn, stopBtn));
+  } else if (isReplaying()) {
+    if (isOnSession()) {
+      loadDemoData().then(sessionData => { ravenLog("SessionData", sessionData); demoEvent(sessionData); }).catch(err => console.error(err));
+      const exitBtn = createTextBtn('raven-button error', "Exit", "raven-button-text", () => { removeSession(); reloadPage(); }),
+        downloadBtn = createTextBtn('raven-button info', "Download", "raven-button-text", () => { exportAndDownloadSessionById(getSession()) });
+      if (isManual()) {
+        panel.appendChild(createOptionsContainer(exitBtn, downloadBtn));
+      } else {
+        panel.appendChild(createOptionsContainer(exitBtn));
+      }
+
+    } else {
+      setHeaderText(isAuto() ? "Prepared sessions for you" : "Your recorded Sessions");
+      assembleSessions();
+      if (isManual()) {
+        const exitBtn = createTextBtn('raven-button error', "Exit", "raven-button-text", () => replayEvent()),
+          downloadAllBtn = createTextBtn('raven-button info', "Download All", "raven-button-text", () => exportAndDownloadAllSessions());
+        panel.appendChild(createOptionsContainer(exitBtn, downloadAllBtn));
+      }
+    }
   }
   // if (isManual()) {
   //   const downloadAllBtn = createDownloadAllBtn(() => {
@@ -260,5 +317,4 @@ function assembleDOM() {
 
 if (isEnabled() && isActivated()) {
   assembleDOM();
-  assembleSessions();
 }

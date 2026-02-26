@@ -4,8 +4,8 @@ import { createButtonLabelContainer, createDiv, createIconBtn, createRecordIcon,
 
 const recordBtn = createIconBtn('raven-action-button record', createRecordIcon(), () => recordEvent()),
     replayBtn = createIconBtn('raven-action-button replay', createReplayIcon(), () => replayEvent()),
-    recordContainer = createButtonLabelContainer('choice-container', recordBtn, "Record", "#e53935"),
-    demoContainer = createButtonLabelContainer('choice-container', replayBtn, "Replay", "#00a8ff");
+    recordContainer = createButtonLabelContainer('choice-content', recordBtn, "Record", "#e53935"),
+    demoContainer = createButtonLabelContainer('choice-content', replayBtn, "Replay", "#00a8ff");
 export const modeMenu = createMenuContainer();
 
 function createPill(className, color, contentEl, label, rotation = 0) {
@@ -42,6 +42,7 @@ function createPill(className, color, contentEl, label, rotation = 0) {
 };
 
 function createMenuContainer() {
-    const menu = createDiv("menu-container", demoContainer, recordContainer);
+    const choices = createDiv("choice-container", demoContainer, recordContainer)
+    menu = createDiv("menu-container", choices);
     return menu;
 }

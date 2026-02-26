@@ -21,7 +21,21 @@ export function createDownloadIcon() {
 export function createRecordIcon() {
     return createDiv('raven-record-icon');
 }
-
+function createFolderIcon() {
+    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('width', '22');
+    icon.setAttribute('height', '22');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('fill', 'none');
+    icon.classList.add('raven-file-icon');
+    icon.innerHTML = `
+    <path d="M3 7a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293L12.707 6.7A1 1 0 0 0 13.414 7H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"
+      stroke="currentColor" stroke-width="1.5"/>
+    <path d="M12 10.5v4M12 10.5l-1.5 1.5M12 10.5l1.5 1.5"
+      stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  `;
+    return icon;
+}
 export function createReplayIcon() {
     const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     icon.setAttribute('width', '22');
@@ -70,7 +84,46 @@ export function createTextBtn(className, textContent, textClass = null, fn = nul
     return buttonContent
 }
 
-export function createFileInput(accept = null, fn) {
+function createFileInputZone(accept = null, fn) {
+    // ── Styles ──────────────────────────────────────────
+    const style = document.createElement('style');
+    style.textContent = `
+
+  `;
+    document.head.appendChild(style);
+
+    // ── Drop zone ────────────────────────────────────────
+    const fileInput = createFileInput(accept, fn),
+        icon = createFolderIcon(),
+        label = createDiv('raven-file-label');
+    label.innerHTML = '<b>Click</b> or drop files here';
+    const zone = createDiv('raven-file-zone', fileInput, icon, label)
+
+    // ── Events ───────────────────────────────────────────
+
+    zone.addEventListener('dragover', e => {
+        e.preventDefault();
+        zone.classList.add('drag-over');
+    });
+
+    zone.addEventListener('dragleave', e => {
+        if (!zone.contains(e.relatedTarget)) zone.classList.remove('drag-over');
+    });
+
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const dt = new DataTransfer();
+        Array.from(e.dataTransfer.files).forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+        fileInput.dispatchEvent(new Event('change'));
+    });
+
+    // ── Return both elements to append to your panel ─────
+    return zone;
+}
+
+export function createFileInput(accept = null, fn = null) {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     if (accept) {
@@ -102,6 +155,11 @@ export function createFileInput(accept = null, fn) {
 
 export function createJsonFileInput(fn) {
     const fileInput = createFileInput(".json", (e) => { const json = JSON.parse(e.target.result); fn(json) })
+    return fileInput
+}
+
+export function createJsonZoneFileInput(fn) {
+    const fileInput = createFileInputZone(".json", (e) => { const json = JSON.parse(e.target.result); fn(json) })
     return fileInput
 }
 

@@ -121,6 +121,19 @@ export function exportSession(session) {
     })
 }
 
+export function exportSessionById(sessionId) {
+    return new Promise((res, rej) => {
+        getSessionById(sessionId).then(session => {
+            exportSession(session).then(exportedJson => {
+                res(exportedJson);
+            }).catch(err => {
+                rej("exportSessionById -> ERROR : " + err)
+            })
+        }).catch(err => {
+            rej("exportSessionById -> ERROR : " + err)
+        })
+    })
+}
 // -----------------------------
 // CATEGORIES FUNCTIONS
 // -----------------------------

@@ -1,5 +1,5 @@
 import { getRequestbyRouteRequest, getRouteBySessionUrl, insertSession } from "./db/raven-dao";
-import { downloadJson, generateJsonName } from "./utils/raven-utils";
+import { downloadJson, generateJsonName, reloadPage } from "./utils/raven-utils";
 import { logEvent, snapshotLisener } from "./utils/ravents";
 import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./settings";
 (function () {
@@ -163,7 +163,7 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./set
             if (e.detail.download) {
                 downloadJson(recordedSession, generateJsonName(recordedSession["title"]))
             }
-            window.location.reload()
+            reloadPage()
         })
     })
 })();

@@ -1,20 +1,19 @@
-import { detectNavigation } from "../../utils/raven-utils";
-import { toggleListener } from "../../utils/ravents";
-import { getMode, getState, isManual, isOnSession, isPassive, isRecording, isReplaying } from "../../settings";
-import { examplesContainer, toggleButton } from "./replay";
+import { detectNavigation, reloadPage } from "../../utils/raven-utils";
+import { getMode, getState, isManual, isOnSession, isPassive, isRecording, isReplaying, removeSession, setRavenState } from "../../settings";
+import { examplesContainer } from "./replay";
 import { modeMenu } from "./menu";
 import { addRecordedUrl, recordedUrlsContainer } from "./record";
 import { createDiv } from "../../utils/widgets";
+import { rStates } from "../../utils/constants";
+import { addPage, demoNav } from "./demo";
 
-let panelHoverTimeOut,
-    panelHideTimer = 600;
+let panelHoverTimeOut;
 
 export const indicator = createIndicator(),
-    modeHeader = createModeHeader(),
+    modeHeader = createModeHeader('Make your choice choice 1 choice 2 choice 3 choice 4'),
     panel = createPanel();
 
-// EVENTS
-toggleListener((e) => panelHideTimer = e.detail.panelHideTimer);
+
 // WIDGETS HELPERS
 function createIndicator() {
     const indicator = document.createElement('div');
@@ -58,10 +57,38 @@ function createIndicator() {
     return indicator;
 }
 
-function createModeHeader() {
-    const header = createDiv('raven-mode-header raven-mode-header--manual');
-    header.textContent = 'Manual Mode';
+function createModeHeader(text = 'Manual Mode') {
+    const title = createDiv('raven-mode-header__title');
+    title.textContent = text;
+    title.title = text;
+
+    const header = createDiv(`raven-mode-header raven-mode-header--${getState()}`, title);
+    if (isManual()) {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'raven-mode-header__close';
+        closeBtn.title = 'Close';
+        closeBtn.appendChild(createDiv('raven-mode-header__close-x'));
+        closeBtn.addEventListener('click', () => {
+            if (confirm("Exit and deactivate RAVEN?")) {
+                removeSession();
+                setRavenState(rStates.INACTIVE);
+                reloadPage();
+            }
+        });
+        header.appendChild(closeBtn)
+    }
+    // corner brackets
+    ['tl', 'tr', 'bl', 'br'].forEach(pos => {
+        const c = createDiv(`raven-mode-header__corner raven-mode-header__corner--${pos}`);
+        header.appendChild(c);
+    });
     return header;
+}
+
+export function setHeaderText(text) {
+    const title = modeHeader.querySelector('.raven-mode-header__title');
+    title.textContent = text;
+    title.title = text
 }
 
 function createPanel() {
@@ -78,25 +105,20 @@ function createPanel() {
     });
 
     // Hide panel when leaving both indicator and panel
-    panel.addEventListener('mouseleave', () => {
-        panelHoverTimeOut = setTimeout(() => {
-            panel.classList.remove('raven-panel--visible');
-            panel.classList.add('raven-panel--hidden');
-            indicator.style.display = 'flex';
-            indicator.style.opacity = '1';
-        }, panelHideTimer);
-    });
-    // panel.appendChild(recordPill)
+    // panel.addEventListener('mouseleave', () => {
+    //     panelHoverTimeOut = setTimeout(() => {
+    //         panel.classList.remove('raven-panel--visible');
+    //         panel.classList.add('raven-panel--hidden');
+    //         indicator.style.display = 'flex';
+    //         indicator.style.opacity = '1';
+    //     }, panelHideTimer);
+    // });
     panel.appendChild(modeHeader)
     return panel;
 }
 
 // HELPER RAVEN FUNCTIONS
 function setMode() {
-    // Update mode header
-    modeHeader.className = `raven-mode-header raven-mode-header--${getMode()}`;
-    modeHeader.textContent = isManual() ? 'Manual Mode' : 'Auto Mode';
-
     // Update panel style
     panel.classList.remove('raven-panel--manual', 'raven-panel--auto');
     panel.classList.add(`raven-panel--${getMode()}`);
@@ -104,7 +126,7 @@ function setMode() {
 
 function setState() {
     // Update indicator
-    indicator.className = `raven-indicator raven-indicator--${getState()}`;
+    indicator.className = `raven-indicator ${getState()}`;
 
     // Update indicator text
     const topText = indicator.querySelector('.raven-indicator__top-text');
@@ -122,24 +144,26 @@ function setState() {
         topText.textContent = 'AVEN';
         bottomText.textContent = 'EPLAY';
         if (isOnSession()) {
-
+            startReplay();
         } else {
-            panel.appendChild(toggleButton);
             panel.appendChild(examplesContainer);
         }
     }
 }
 
 function startRecord() {
-    detectNavigation(() => { addRecordedUrl(location.hash, document.title) });
+    panel.appendChild(demoNav);
+    detectNavigation(() => { addPage(location.hash, document.title) });
     panel.appendChild(recordedUrlsContainer);
     setTimeout(() => {
         addRecordedUrl(location.hash, document.title)
     }, 1000);
-    
-}
-function startReplay() {
 
+}
+
+function startReplay() {
+    panel.appendChild(demoNav);
+    // detectNavigation(() => { addPage(location.hash, document.title) });
 }
 
 setMode();
