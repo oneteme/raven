@@ -317,4 +317,8 @@ function assembleDOM() {
 
 if (isEnabled() && isActivated()) {
   assembleDOM();
+} else {
+  if (isEnabled()) {
+    logEvent(1, 15000);
+  }
 }

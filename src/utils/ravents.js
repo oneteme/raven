@@ -15,8 +15,8 @@ function raventListener(event, fn) {
 export function logListener(fn) {
     raventListener(LOG, fn)
 }
-export function logEvent(code) {
-    raventDispatch(LOG, { code });
+export function logEvent(code, duration = 10000) {
+    raventDispatch(LOG, { code, duration });
 }
 
 // **** RAVEN ACTIONS **** //

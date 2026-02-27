@@ -4,6 +4,7 @@ import { logListener } from "../utils/ravents";
 const toastsContainer = createToastsContainer(),
     rMessages = {
         0: createLogMessage("Unknown error occured"),
+        1: createLogMessage("RAVEN is <b>deactivated</b> -> Press <b>Ctrl + Shift + A </b> to activate", rLogs.INFO),
         10: createLogMessage("Session not found"),
         11: createLogMessage("There are no RAVEN Sessions"),
         20: createLogMessage("RAVEN routes could not be found"),
@@ -17,7 +18,7 @@ const toastsContainer = createToastsContainer(),
 let logs = new Map();
 
 logListener((e) => {
-    showToastNotification(e.detail.code)
+    showToastNotification(e.detail.code, e.detail.duration)
 });
 
 function createToastsContainer() {
@@ -27,7 +28,7 @@ function createToastsContainer() {
     return container;
 }
 
-function showToastNotification(code, duration = 10000) {
+function showToastNotification(code, duration) {
     const logMessage = rMessages[code] ?? rMessages[0];
 
     const message = logMessage.text,

@@ -21,6 +21,7 @@ export function createDownloadIcon() {
 export function createRecordIcon() {
     return createDiv('raven-record-icon');
 }
+
 function createFolderIcon() {
     const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     icon.setAttribute('width', '22');
@@ -36,6 +37,7 @@ function createFolderIcon() {
   `;
     return icon;
 }
+
 export function createReplayIcon() {
     const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     icon.setAttribute('width', '22');
@@ -96,7 +98,7 @@ function createFileInputZone(accept = null, fn) {
     const fileInput = createFileInput(accept, fn),
         icon = createFolderIcon(),
         label = createDiv('raven-file-label');
-    label.innerHTML = '<b>Click</b> or drop files here';
+    label.innerHTML = '<b>Click</b> or drop RAVEN files here';
     const zone = createDiv('raven-file-zone', fileInput, icon, label)
 
     // ── Events ───────────────────────────────────────────

@@ -1,7 +1,7 @@
 import { getRequestbyRouteRequest, getRouteBySessionUrl, insertSession } from "./db/raven-dao";
 import { downloadJson, generateJsonName, reloadPage } from "./utils/raven-utils";
 import { logEvent, snapshotLisener } from "./utils/ravents";
-import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./settings";
+import { getSession, isOnSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./settings";
 (function () {
     let navigations = {};
 
@@ -50,7 +50,8 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./set
     if (isRecording()) {
         navigations = {}
         applyXHR(saveXHR, "🔴 new RECORD XHR")
-    } else if (isReplaying()) {
+    } 
+    else if (isOnSession()) {
         setupXHRData();
     }
     async function setupXHRData() {

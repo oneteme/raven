@@ -2,15 +2,15 @@ import { detectNavigation, reloadPage } from "../../utils/raven-utils";
 import { getMode, getState, isManual, isOnSession, isPassive, isRecording, isReplaying, removeSession, setRavenState } from "../../settings";
 import { examplesContainer } from "./replay";
 import { modeMenu } from "./menu";
-import { addRecordedUrl, recordedUrlsContainer } from "./record";
 import { createDiv } from "../../utils/widgets";
 import { rStates } from "../../utils/constants";
 import { addPage, demoNav } from "./demo";
+import { demoEvent } from "../../utils/ravents";
 
 let panelHoverTimeOut;
 
 export const indicator = createIndicator(),
-    modeHeader = createModeHeader('Make your choice choice 1 choice 2 choice 3 choice 4'),
+    modeHeader = createModeHeader('Make your choice'),
     panel = createPanel();
 
 
@@ -77,11 +77,6 @@ function createModeHeader(text = 'Manual Mode') {
         });
         header.appendChild(closeBtn)
     }
-    // corner brackets
-    ['tl', 'tr', 'bl', 'br'].forEach(pos => {
-        const c = createDiv(`raven-mode-header__corner raven-mode-header__corner--${pos}`);
-        header.appendChild(c);
-    });
     return header;
 }
 
@@ -92,8 +87,7 @@ export function setHeaderText(text) {
 }
 
 function createPanel() {
-    const panel = document.createElement('div');
-    panel.className = 'raven-panel';
+    const panel = createDiv('raven-panel',modeHeader);
 
     // Keep panel open when hovering over it
     panel.addEventListener('mouseenter', () => {
@@ -104,16 +98,17 @@ function createPanel() {
         panel.classList.remove('raven-panel--hidden');
     });
 
-    // Hide panel when leaving both indicator and panel
-    // panel.addEventListener('mouseleave', () => {
-    //     panelHoverTimeOut = setTimeout(() => {
-    //         panel.classList.remove('raven-panel--visible');
-    //         panel.classList.add('raven-panel--hidden');
-    //         indicator.style.display = 'flex';
-    //         indicator.style.opacity = '1';
-    //     }, panelHideTimer);
-    // });
-    panel.appendChild(modeHeader)
+    // Hide panel when clicking outside
+    document.addEventListener('click', (e) => {
+        const clickedOutside = !panel.contains(e.target) && !indicator.contains(e.target);
+
+        if (clickedOutside) {
+            panel.classList.remove('raven-panel--visible');
+            panel.classList.add('raven-panel--hidden');
+            indicator.style.display = 'flex';
+            indicator.style.opacity = '1';
+        }
+    });
     return panel;
 }
 
@@ -154,9 +149,9 @@ function setState() {
 function startRecord() {
     panel.appendChild(demoNav);
     detectNavigation(() => { addPage(location.hash, document.title) });
-    panel.appendChild(recordedUrlsContainer);
     setTimeout(() => {
-        addRecordedUrl(location.hash, document.title)
+        demoEvent();
+        addPage(location.hash, document.title)
     }, 1000);
 
 }

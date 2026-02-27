@@ -31,7 +31,7 @@ export function fetchJson(path) {
     })
 }
 
-export function detectNavigation(fn, detectionFrequency = 200) {
+export function detectNavigation(fn, detectionFrequency = 100) {
     let last = location.href;
     ravenLog("detectNavigation")
     setInterval(() => {
