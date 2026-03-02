@@ -2,7 +2,7 @@ import { detectNavigation, reloadPage } from "../../utils/raven-utils";
 import { getMode, getState, isManual, isOnSession, isPassive, isRecording, isReplaying, removeSession, setRavenState } from "../../settings";
 import { examplesContainer } from "./replay";
 import { modeMenu } from "./menu";
-import { createDiv } from "../../utils/widgets";
+import { createDiv, createTextDiv } from "../../utils/widgets";
 import { rStates } from "../../utils/constants";
 import { addPage, demoNav } from "./demo";
 import { demoEvent } from "../../utils/ravents";
@@ -16,38 +16,13 @@ export const indicator = createIndicator(),
 
 // WIDGETS HELPERS
 function createIndicator() {
-    const indicator = document.createElement('div');
-    indicator.className = 'raven-indicator raven-indicator--passive';
-
-    const content = document.createElement('div');
-    content.className = 'raven-indicator__content';
-
-    const dot = document.createElement('div');
-    dot.className = 'raven-indicator__dot';
-
-    const bigLetter = document.createElement('div');
-    bigLetter.className = 'raven-indicator__big-letter';
-    bigLetter.textContent = 'R';
-
-    const textStack = document.createElement('div');
-    textStack.className = 'raven-indicator__text-stack';
-
-    const topText = document.createElement('div');
-    topText.className = 'raven-indicator__top-text';
-    topText.textContent = 'RAVEN';
-
-    const bottomText = document.createElement('div');
-    bottomText.className = 'raven-indicator__bottom-text';
-    bottomText.textContent = 'AVEN';
-
-    textStack.appendChild(topText);
-    textStack.appendChild(bottomText);
-
-    content.appendChild(dot);
-    content.appendChild(bigLetter);
-    content.appendChild(textStack);
-
-    indicator.appendChild(content);
+    const dot = createDiv('raven-indicator__dot'),
+        bigLetter = createTextDiv('raven-indicator__big-letter', 'R'),
+        topText = createTextDiv('raven-indicator__top-text', 'RAVEN'),
+        bottomText = createTextDiv('raven-indicator__bottom-text', 'AVEN'),
+        textStack = createDiv('raven-indicator__text-stack', topText, bottomText),
+        content = createDiv('raven-indicator__content', dot, bigLetter, textStack),
+        indicator = createDiv('raven-indicator raven-indicator--passive', content);
     indicator.addEventListener('mouseenter', () => {
         panel.classList.add('raven-panel--visible');
         panel.classList.remove('raven-panel--hidden');
@@ -87,7 +62,7 @@ export function setHeaderText(text) {
 }
 
 function createPanel() {
-    const panel = createDiv('raven-panel',modeHeader);
+    const panel = createDiv('raven-panel', modeHeader);
 
     // Keep panel open when hovering over it
     panel.addEventListener('mouseenter', () => {
@@ -152,7 +127,7 @@ function startRecord() {
     setTimeout(() => {
         demoEvent();
         addPage(location.hash, document.title)
-    }, 1000);
+    }, 1500);
 
 }
 

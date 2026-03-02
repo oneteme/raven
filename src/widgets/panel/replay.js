@@ -91,9 +91,7 @@ function createCategoryAccordion(categoryName) {
 }
 
 function createExamplesContainer() {
-    const examplesContainer = document.createElement('div');
-    examplesContainer.className = 'raven-examples-container raven-scroll';
-    return examplesContainer;
+    return createDiv('raven-examples-container raven-scroll');
 }
 
 function createEmptyState() {

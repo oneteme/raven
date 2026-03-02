@@ -1,5 +1,6 @@
 import { getAllCategories, getCategoryByName, insertCategory } from "../db/raven-dao";
 import { ravenLog } from "../settings";
+import { createDiv, createTextBtn, createTextDiv } from "../utils/widgets";
 
 let showingDropdown = true,
   categoryInputTimeOut,
@@ -56,16 +57,13 @@ createEvents();
    ELEMENT BUILDERS
 ========================== */
 function createOverlay() {
-  const el = document.createElement('div');
-  el.className = 'raven-modal-overlay';
+  const el = createDiv('raven-modal-overlay');
   el.style.display = 'none';
   return el;
 }
 
 function createModalBox() {
-  const el = document.createElement('div');
-  el.className = 'raven-modal-box';
-  return el;
+  return createDiv('raven-modal-box');
 }
 
 function createTitle() {
@@ -90,8 +88,7 @@ function createDescriptionTextarea() {
 }
 
 function createDownloadCheckbox() {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'raven-modal__checkbox-container';
+  const wrapper = createDiv('raven-modal__checkbox-container');
 
   const input = document.createElement('input');
   input.type = 'checkbox';
@@ -108,15 +105,10 @@ function createDownloadCheckbox() {
 }
 
 function createCategorySection() {
-  const container = document.createElement('div');
-  container.className = 'raven-modal__category-container';
-
-  const title = document.createElement('div');
-  title.className = 'raven-modal__section-title';
-  title.textContent = 'Category';
-
-  const row = document.createElement('div');
-  row.className = 'raven-modal__category-row';
+  const container = createDiv('raven-modal__category-container'),
+    title = createTextDiv('raven-modal__section-title', 'Category'),
+    row = createDiv('raven-modal__category-row'),
+    errorMsg = createDiv('raven-modal__category-error');
 
   const select = document.createElement('select');
   select.className = 'raven-modal__select';
@@ -130,23 +122,34 @@ function createCategorySection() {
   input.className = 'raven-modal__category-input';
   input.placeholder = 'Enter new category';
 
-  const errorMsg = document.createElement('div');
-  errorMsg.className = 'raven-modal__category-error';
+  // const addBtn = document.createElement('button');
+  const addBtn = createTextBtn('raven-modal__category-toggle-btn', '+ Add Category', null,
+    () => {
+      showingDropdown = false;
+      updateCategoryUI();
+      category.input.focus();
+    });
 
-  const addBtn = document.createElement('button');
-  addBtn.type = 'button';
-  addBtn.className = 'raven-modal__category-toggle-btn';
-  addBtn.textContent = '+ Add Category';
+  const backBtn = createTextBtn('raven-modal__category-back-btn', 'Use Existing Category', null,
+    () => {
+      category.input.value = '';
+      clearCategoryError();
+      showingDropdown = true;
+      updateCategoryUI();
+    });
 
-  const backBtn = document.createElement('button');
-  backBtn.type = 'button';
-  backBtn.className = 'raven-modal__category-back-btn';
-  backBtn.textContent = 'Use Existing Category';
-
-  const validateBtn = document.createElement('button');
-  validateBtn.type = 'button';
-  validateBtn.className = 'raven-modal__category-validate-btn';
-  validateBtn.textContent = '✓';
+  const validateBtn = createTextBtn('raven-modal__category-validate-btn', '✓', null,
+    () => {
+      const value = input.value.trim();
+      if (value && !categoryError) {
+        // insertCategoryOK(value)
+        createCategory(value);
+        select.value = value;
+        input.value = '';
+        showingDropdown = true;
+        updateCategoryUI();
+      }
+    });
 
   container.append(title, row);
 
@@ -154,8 +157,7 @@ function createCategorySection() {
 }
 
 function createActions() {
-  const el = document.createElement('div');
-  el.className = 'raven-modal__actions';
+  const el = createDiv('raven-modal__actions');
 
   el.innerHTML = `
       <button id="cancel" class="raven-modal__button raven-modal__button--cancel">Cancel</button>
@@ -165,31 +167,6 @@ function createActions() {
 }
 
 function createEvents() {
-  category.addBtn.onclick = () => {
-    showingDropdown = false;
-    updateCategoryUI();
-    category.input.focus();
-  };
-
-  category.backBtn.onclick = () => {
-    category.input.value = '';
-    clearCategoryError();
-    showingDropdown = true;
-    updateCategoryUI();
-  };
-
-  category.validateBtn.onclick = () => {
-    const value = category.input.value.trim();
-    if (value && !categoryError) {
-      // insertCategoryOK(value)
-      createCategory(value);
-      category.select.value = value;
-      category.input.value = '';
-      showingDropdown = true;
-      updateCategoryUI();
-    }
-  };
-
   // Allow Enter key to validate
   category.input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {

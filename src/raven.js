@@ -12,11 +12,6 @@ import { createSession, emptyStateContainer, examplesContainer } from "./widgets
 import { createDiv, createJsonZoneFileInput, createOptionsContainer, createTextBtn } from "./utils/widgets.js";
 import { rStates } from "./utils/constants.js";
 
-// CREATE WIDGETS 
-const container = document.createElement('div');
-container.className = 'raven-container';
-
-
 // SESSIONS FUNCITONS
 function exportSessions(sessions, index = 0, indexJson = { "dir": "", "files": [] }) {
   ravenLog("[EXPORT SESSION]", sessions, index)
@@ -77,17 +72,7 @@ function exportAndDownloadAllSessions() {
   })
 }
 
-function exportAndDownloadSession(session) {
-  exportSession(session).then(exportedJson => {
-    const jsonName = generateJsonName(exportedJson.title);
-    downloadJson(exportedJson, jsonName);
-    res(exportedJson);
-  }).catch(err => {
-    rej("exportAndDownloadSession -> ERROR : " + err)
-  })
-}
-
-function exportAndDownloadSessionById(sessionId) {
+function exportAndDownloadSession(sessionId) {
   return new Promise((res, rej) => {
     exportSessionById(sessionId).then(exportedJson => {
       const jsonName = generateJsonName(exportedJson.title);
@@ -173,7 +158,7 @@ function assembleDOM() {
     if (isOnSession()) {
       loadDemoData().then(sessionData => { ravenLog("SessionData", sessionData); demoEvent(sessionData); }).catch(err => console.error(err));
       const exitBtn = createTextBtn('raven-button error', "Return", "raven-button-text", () => { removeSession(); reloadPage(); }),
-        downloadBtn = createTextBtn('raven-button info', "Download", "raven-button-text", () => { exportAndDownloadSessionById(getSession()) });
+        downloadBtn = createTextBtn('raven-button info', "Download", "raven-button-text", () => { exportAndDownloadSession(getSession()) });
       if (isManual()) {
         panel.appendChild(createOptionsContainer(exitBtn, downloadBtn));
       } else {
