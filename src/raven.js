@@ -8,8 +8,8 @@ import { getImportedFiles, getSession, isActivated, isAuto, isEnabled, isManual,
 import { downloadJson, fetchJson, generateJsonName, reloadPage } from "./utils/raven-utils.js";
 import { indicator, panel, setHeaderText } from "./widgets/panel/raven-panel.js";
 import { demoEvent, logEvent, recordEvent, replayEvent } from "./utils/ravents.js";
-import { emptyStateContainer, examplesContainer } from "./widgets/panel/replay.js";
-import { createDiv, createDownloadBtn, createJsonZoneFileInput, createOptionsContainer, createTextBtn, displayNextSiblings } from "./utils/widgets.js";
+import { createSession, emptyStateContainer, examplesContainer } from "./widgets/panel/replay.js";
+import { createDiv, createJsonZoneFileInput, createOptionsContainer, createTextBtn } from "./utils/widgets.js";
 import { rStates } from "./utils/constants.js";
 
 // CREATE WIDGETS 
@@ -42,7 +42,7 @@ function assembleSessions() {
   loadSessions().then(() => {
     getAllSessions().then(sessions => {
       ravenLog("sessions : ", sessions)
-      sessions.map(createSession)
+      sessions.map(createSession);
       // examplesContainer.appendChild(sessions);
     }).catch(err => {
       examplesContainer.appendChild(emptyStateContainer)
@@ -67,59 +67,6 @@ function loadSessions() {
         })
       });
   })
-}
-
-function createSession(session) {
-  const item = document.createElement('div');
-  item.className = 'raven-session-item';
-
-  const titleEl = document.createElement('div');
-  titleEl.className = 'raven-session-item__title';
-  titleEl.textContent = session.title;
-
-  const descEl = document.createElement('div');
-  descEl.className = 'raven-session-item__description';
-  descEl.textContent = session.description;
-
-  // Create download button
-  const downloadBtn = createDownloadBtn('raven-session-item__download-btn', (e) => {
-    e.stopPropagation();
-    exportSession(session).then(exportedJson => {
-      const jsonName = generateJsonName(exportedJson.title);
-      downloadJson(exportedJson, jsonName)
-    })
-  });
-  item.appendChild(titleEl);
-  item.appendChild(descEl);
-  if (isManual()) {
-    item.appendChild(downloadBtn);
-  }
-  item.addEventListener('click', () => {
-    getRouteBySessionId(session.id).then(sessionRoute => {
-      if (sessionRoute) {
-        setRavenSession(session.id)
-        setTimeout(() => {
-          window.location.href = sessionRoute.route;
-          reloadPage()
-        }, 200);
-      } else {
-        ravenLog("route not found")
-      }
-    })
-  });
-  if (session.category) {
-    getCategoryById(session.category).then(category => {
-      item.style.display = "none"
-      setupSessionCategory(category.name).then(categoryDiv => categoryDiv.appendChild(item));
-      ravenLog("found CATEGORY in SESSION", category)
-    }).catch(err => {
-      ravenLog("NO CATEGORY FOUND")
-      examplesContainer.append(item)
-    });
-  } else {
-    examplesContainer.append(item)
-  }
-  return item
 }
 
 function exportAndDownloadAllSessions() {
@@ -150,53 +97,6 @@ function exportAndDownloadSessionById(sessionId) {
       rej("exportAndDownloadSessionById -> ERROR : " + err)
     })
   })
-}
-function setupSessionCategory(categoryName) {
-  return new Promise(res => {
-    let div = document.querySelector(`[category="${categoryName}"]`);
-    if (!div) {
-      div = createCategoryAccordion(categoryName)
-      res(div)
-    }
-    res(div)
-  })
-}
-
-function createCategoryAccordion(categoryName) {
-  const accordion = document.createElement('div');
-  accordion.className = 'raven-category-accordion';
-
-  // Header
-  const header = document.createElement('div');
-  header.className = 'raven-category-header';
-
-  const title = document.createElement('div');
-  title.className = 'raven-category-header__title';
-  title.textContent = categoryName;
-
-  const icon = document.createElement('span');
-  icon.className = 'raven-category-header__icon';
-  icon.textContent = '▶';
-
-  header.appendChild(title);
-  header.appendChild(icon);
-
-
-  // Toggle accordion
-  header.addEventListener('click', () => {
-    const isExpanded = header.classList.contains('raven-category-header--expanded');
-    if (isExpanded) {
-      header.classList.remove('raven-category-header--expanded');
-      displayNextSiblings(header, "none")
-    } else {
-      header.classList.add('raven-category-header--expanded');
-      displayNextSiblings(header, "block")
-    }
-  });
-  accordion.setAttribute("category", categoryName);
-  accordion.appendChild(header);
-  examplesContainer.appendChild(accordion);
-  return accordion;
 }
 
 function loadFile(files, index, dir, resolve) {
@@ -253,7 +153,7 @@ function assembleDOM() {
   if (isPassive()) {
     panel.appendChild(createJsonZoneFileInput((json) => {
       insertImportedSession(json).then(session => {
-        createSession(session)
+        // createSession(session)
         logEvent(101)
       }).catch(err => {
         logEvent(40)
@@ -267,12 +167,12 @@ function assembleDOM() {
         reloadPage();
       }
     }),
-      stopBtn = createTextBtn('raven-button info', "Save", "raven-button-text", () => recordEvent());
-    panel.append(createOptionsContainer(abandonBtn, stopBtn));
+      saveBtn = createTextBtn('raven-button info', "Save", "raven-button-text", () => recordEvent());
+    panel.append(createOptionsContainer(abandonBtn, saveBtn));
   } else if (isReplaying()) {
     if (isOnSession()) {
       loadDemoData().then(sessionData => { ravenLog("SessionData", sessionData); demoEvent(sessionData); }).catch(err => console.error(err));
-      const exitBtn = createTextBtn('raven-button error', "Exit", "raven-button-text", () => { removeSession(); reloadPage(); }),
+      const exitBtn = createTextBtn('raven-button error', "Return", "raven-button-text", () => { removeSession(); reloadPage(); }),
         downloadBtn = createTextBtn('raven-button info', "Download", "raven-button-text", () => { exportAndDownloadSessionById(getSession()) });
       if (isManual()) {
         panel.appendChild(createOptionsContainer(exitBtn, downloadBtn));

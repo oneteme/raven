@@ -543,7 +543,7 @@
 
 /* Examples Container */
 .raven-examples-container {
-  width: 280px;
+  width: 300px;
   max-height: 300px;
   overflow-y: auto;
   overflow-x: hidden;

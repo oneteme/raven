@@ -72,8 +72,7 @@ export function createDownloadBtn(classname, fn = null) {
 export function createTextBtn(className, textContent, textClass = null, fn = null) {
     const buttonContent = createDiv(className)
     if (textClass) {
-        const buttonText = document.createElement('div');
-        buttonText.className = textClass;
+        const buttonText = createDiv(textClass);
         buttonText.textContent = textContent;
         buttonContent.appendChild(buttonText);
     } else {
@@ -175,10 +174,24 @@ export function displayNextSiblings(div, display = "none") {
 }
 
 export function createDiv(className, ...children) {
+    return createTextDiv(className, null, ...children);
+}
+
+export function createTextDiv(className, textContent, ...children) {
     const div = document.createElement('div');
     div.className = className;
+    if (textContent) {
+        div.textContent = textContent;
+    }
     for (let i = 0; i < children.length; i++) {
         div.appendChild(children[i]);
     }
     return div;
+}
+
+export function createSpan(className, textContent) {
+    const span = document.createElement("span");
+    span.className = className;
+    span.textContent = textContent;
+    return span;
 }
