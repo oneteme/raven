@@ -1,7 +1,7 @@
 import { getRequestbyRouteRequest, getRouteBySessionUrl, insertSession } from "./db/raven-dao";
 import { downloadJson, generateJsonName, reloadPage } from "./utils/raven-utils";
 import { logEvent, snapshotLisener } from "./utils/ravents";
-import { getSession, isOnSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./settings";
+import { getSession, isOnSession, isRecording, ravenLog, ravenWarn } from "./settings";
 (function () {
     let navigations = {};
 

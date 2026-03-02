@@ -1,4 +1,4 @@
-import { exportSession, getCategoryById, getRouteBySessionId } from "../../db/raven-dao";
+import { exportSession, getRouteBySessionId } from "../../db/raven-dao";
 import { isManual, ravenLog, setRavenSession } from "../../settings";
 import { downloadJson, generateJsonName, reloadPage } from "../../utils/raven-utils";
 import { recordEvent } from "../../utils/ravents";
@@ -19,7 +19,7 @@ export function createDownloadSessionBtn(session) {
     });
 }
 
-export function createSession(session) {
+export function createSession(session, getCategoryById) {
     const titleEl = createTextDiv('raven-session-item__title', session.title),
         descEl = createTextDiv('raven-session-item__description', session.description),
         item = createDiv('raven-session-item', titleEl, descEl);
@@ -44,8 +44,9 @@ export function createSession(session) {
     if (session.category) {
         getCategoryById(session.category).then(category => {
             item.style.display = "none"
-            setupSessionCategory(category.name).then(categoryDiv => categoryDiv.appendChild(item));
-            ravenLog("found CATEGORY in SESSION", category)
+            const categoryDiv = setupSessionCategory(category.name);
+            categoryDiv.appendChild(item);
+            ravenLog("found CATEGORY in SESSION", category);
         }).catch(err => {
             ravenLog("NO CATEGORY FOUND")
             examplesContainer.append(item)
@@ -57,14 +58,12 @@ export function createSession(session) {
 }
 
 function setupSessionCategory(categoryName) {
-    return new Promise(res => {
-        let div = document.querySelector(`[category="${categoryName}"]`);
-        if (!div) {
-            div = createCategoryAccordion(categoryName)
-            res(div)
-        }
-        res(div)
-    })
+    let div = document.querySelector(`[category="${categoryName}"]`);
+    if (!div) {
+        div = createCategoryAccordion(categoryName)
+    }
+    return div;
+
 }
 
 function createCategoryAccordion(categoryName) {

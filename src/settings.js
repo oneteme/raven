@@ -96,7 +96,7 @@ export function getSession() {
     return ravenParams.loadedSession
 }
 
-export function getImportedFiles() {
+export function getAutoModeIndex() {
     return ravenParams.loadedFiles
 }
 

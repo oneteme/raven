@@ -23,14 +23,13 @@ function addCategory(id, name) {
   category.select.appendChild(option);
 }
 function createCategory(name) {
-  return new Promise((res, rej) => {
-    insertCategory(name).then(categoryId => {
-      addCategory(categoryId, name)
-      category.select.value = categoryId;
-      category.input.value = '';
-      res(categoryId)
-    })
+  return insertCategory(name).then(categoryId => {
+    addCategory(categoryId, name)
+    category.select.value = categoryId;
+    category.input.value = '';
+    return categoryId
   })
+
 }
 
 /* =========================

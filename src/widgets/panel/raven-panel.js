@@ -1,11 +1,11 @@
 import { detectNavigation, reloadPage } from "../../utils/raven-utils";
-import { getMode, getState, isManual, isOnSession, isPassive, isRecording, isReplaying, removeSession, setRavenState } from "../../settings";
+import { getMode, getState, isActivated, isAuto, isEnabled, isManual, isOnSession, isPassive, isRecording, isReplaying, removeSession, setRavenState } from "../../settings";
 import { examplesContainer } from "./replay";
 import { modeMenu } from "./menu";
-import { createDiv, createTextDiv } from "../../utils/widgets";
+import { createDiv, createJsonZoneFileInput, createOptionsContainer, createTextBtn, createTextDiv } from "../../utils/widgets";
 import { rStates } from "../../utils/constants";
 import { addPage, demoNav } from "./demo";
-import { demoEvent } from "../../utils/ravents";
+import { demoEvent, fetchSessions, recordEvent, replayEvent, replaySession } from "../../utils/ravents";
 
 let panelHoverTimeOut;
 
@@ -88,40 +88,39 @@ function createPanel() {
 }
 
 // HELPER RAVEN FUNCTIONS
-function setMode() {
+function setupPanelMode() {
     // Update panel style
     panel.classList.remove('raven-panel--manual', 'raven-panel--auto');
     panel.classList.add(`raven-panel--${getMode()}`);
 }
 
-function setState() {
+function setupIndicatorState() {
     // Update indicator
     indicator.className = `raven-indicator ${getState()}`;
 
     // Update indicator text
     const topText = indicator.querySelector('.raven-indicator__top-text');
     const bottomText = indicator.querySelector('.raven-indicator__bottom-text');
-
-    if (isPassive()) {
-        topText.textContent = 'RAVEN';
-        bottomText.textContent = 'AVEN';
-        panel.appendChild(modeMenu)
-    } else if (isRecording()) {
-        topText.textContent = 'AVEN';
-        bottomText.textContent = 'ECORD';
-        startRecord();
-    } else if (isReplaying()) {
-        topText.textContent = 'AVEN';
-        bottomText.textContent = 'EPLAY';
-        if (isOnSession()) {
-            startReplay();
-        } else {
-            panel.appendChild(examplesContainer);
+    if (isEnabled() && isActivated()) {
+        if (isPassive()) {
+            topText.textContent = 'RAVEN';
+            bottomText.textContent = 'AVEN';
+        } else if (isRecording()) {
+            topText.textContent = 'AVEN';
+            bottomText.textContent = 'ECORD';
+        } else if (isReplaying()) {
+            topText.textContent = 'AVEN';
+            bottomText.textContent = 'EPLAY';
         }
+        document.body.appendChild(createDiv('raven-container', panel, indicator));
     }
 }
 
-function startRecord() {
+export function showMenu(fileZoneEvent) {
+    panel.appendChild(modeMenu)
+    panel.appendChild(createJsonZoneFileInput(fileZoneEvent))
+}
+export function showRecord() {
     panel.appendChild(demoNav);
     detectNavigation(() => { addPage(location.hash, document.title) });
     setTimeout(() => {
@@ -129,13 +128,37 @@ function startRecord() {
         addPage(location.hash, document.title)
     }, 1500);
 
+    setHeaderText("Recording session...");
+    const abandonBtn = createTextBtn('raven-button error', "Abandon", "raven-button-text", () => {
+        if (confirm("Discard this navigation?")) {
+            setRavenState(rStates.PASSIVE);
+            reloadPage();
+        }
+    }),
+        saveBtn = createTextBtn('raven-button info', "Save", "raven-button-text", () => recordEvent());
+    panel.append(createOptionsContainer(abandonBtn, saveBtn));
 }
-
-function startReplay() {
+export function showSessions(donwloadAllEvent) {
+    panel.appendChild(examplesContainer);
+    setHeaderText(isAuto() ? "Prepared sessions for you" : "Your recorded Sessions");
+    if (isManual()) {
+        const exitBtn = createTextBtn('raven-button error', "Back", "raven-button-text", () => replayEvent()),
+            downloadAllBtn = createTextBtn('raven-button info', "Download All", "raven-button-text", donwloadAllEvent);
+        panel.appendChild(createOptionsContainer(exitBtn, downloadAllBtn));
+    }
+    fetchSessions();
+}
+export function startReplay(downloadSessionEvent) {
     panel.appendChild(demoNav);
-    // detectNavigation(() => { addPage(location.hash, document.title) });
+    replaySession();
+    const exitBtn = createTextBtn('raven-button error', "Back", "raven-button-text", () => { removeSession(); reloadPage(); }),
+        downloadBtn = createTextBtn('raven-button info', "Download", "raven-button-text", downloadSessionEvent);
+    if (isManual()) {
+        panel.appendChild(createOptionsContainer(exitBtn, downloadBtn));
+    } else {
+        panel.appendChild(createOptionsContainer(exitBtn));
+    }
 }
-
-setMode();
-setState();
+setupPanelMode();
+setupIndicatorState();
 

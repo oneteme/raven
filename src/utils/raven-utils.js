@@ -22,18 +22,16 @@ export function generateJsonName(name) {
 }
 
 export function fetchJson(path) {
-    return new Promise((res, rej) => {
-        fetch(path).then(response => response.json()).then(json => {
-            res(json)
-        }).catch(err => {
-            rej("Error fetching json with path : ", path, " ERROR => ", err)
-        })
+    return fetch(path).then(response => response.json()).then(json => {
+        return json;
+    }).catch(err => {
+        Promise.reject("Error fetching json with path : ", path, " ERROR => ", err)
     })
 }
 
 export function detectNavigation(fn, detectionFrequency = 100) {
     let last = location.href;
-    ravenLog("detectNavigation")
+    ravenLog("detectNavigation");
     setInterval(() => {
         if (location.href !== last) {
             last = location.href;
