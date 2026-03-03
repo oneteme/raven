@@ -5,6 +5,7 @@ export const rModes = {
 }
 
 export const rStates = {
+    INACTIVE: "inactivated",
     RECORD: "recording",
     REPLAY: "demo",
     PASSIVE: "passive"
@@ -19,5 +20,6 @@ export const rLocalStrg = {
 export const rLogs = {
     SUCCESS: "success",
     WARNING: "warning",
-    ERROR: "error"
+    ERROR: "error",
+    INFO: "info"
 }

@@ -1,7 +1,7 @@
-import { getRequestbyRouteRequest, getRouteBySessionUrl, insertSession } from "./db/raven-dao";
-import { downloadJson, generateJsonName } from "./utils/raven-utils";
-import { logEvent, snapshotEvent, snapshotLisener } from "./utils/ravents";
-import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./settings";
+import * as dao from "./db/raven-dao";
+import * as utils from "./utils/raven-utils";
+import * as ravents from "./utils/ravents";
+import { getSession, isOnSession, isRecording, ravenLog, ravenWarn } from "./settings";
 (function () {
     let navigations = {};
 
@@ -50,7 +50,8 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./set
     if (isRecording()) {
         navigations = {}
         applyXHR(saveXHR, "🔴 new RECORD XHR")
-    } else if (isReplaying()) {
+    }
+    else if (isOnSession()) {
         setupXHRData();
     }
     async function setupXHRData() {
@@ -59,7 +60,7 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./set
     function applyXHR(fn, msg = "New XHR") {
         window.XMLHttpRequest = function () {
             const xhr = new OriginalXHR();
-            openXHR(xhr)
+            openXHR(xhr);
             return fn(xhr);
         }
     }
@@ -82,9 +83,9 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./set
                 return originalSend.apply(xhr, arguments);
             }
             // xhr.abort();
-            getRouteBySessionUrl(getSession(), xhr.__pageUrl)
+            dao.getRouteBySessionUrl(getSession(), xhr.__pageUrl)
                 .then(route => {
-                    getRequestbyRouteRequest(route.id, encodeURIComponent(xhr.__url))
+                    dao.getRequestbyRouteRequest(route.id, encodeURIComponent(xhr.__url))
                         .then(request => {
                             ravenLog("[RAVEN INTERCEPTOR]", "FOUND REQUEST : ", request)
                             const fakeXHR = request.xhr,
@@ -100,13 +101,13 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./set
                             return;
                         }).catch(err => {
                             ravenWarn(err)
-                            logEvent(30)
+                            ravents.logEvent(30)
                             fakeEmptyResponse(xhr)
                             return;
                         })
                 }).catch(err => {
                     ravenWarn(err)
-                    logEvent(20)
+                    ravents.logEvent(20)
                     fakeEmptyResponse(xhr)
                     return;
                 });
@@ -151,19 +152,19 @@ import { getSession, isRecording, isReplaying, ravenLog, ravenWarn } from "./set
         });
         return xhr;
     }
-    snapshotLisener((e) => {
+    ravents.snapshotLisener((e) => {
         const recordedSession = {
             "title": e.detail.title,
             "description": e.detail.description,
             "category": e.detail.category,
             "navigations": navigations
         };
-        insertSession(recordedSession, e.detail.categoryId).then(session => {
+        dao.insertSession(recordedSession, e.detail.categoryId).then(session => {
             ravenLog("session inserted : ", session)
             if (e.detail.download) {
-                downloadJson(recordedSession, generateJsonName(recordedSession["title"]))
+                utils.downloadJson(recordedSession, utils.generateJsonName(recordedSession["title"]))
             }
-            window.location.reload()
+            utils.reloadPage()
         })
     })
 })();

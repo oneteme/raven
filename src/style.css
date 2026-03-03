@@ -7,7 +7,16 @@
   z-index: 9999;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: auto;
+  min-width: 240px;
 }
+
+/* .menu-container {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+  align-items: center;
+} */
+
 
 /* Indicator */
 
@@ -26,18 +35,18 @@
   gap: 4px;
 }
 
-.raven-indicator--passive {
+.raven-indicator.demo {
   background: linear-gradient(90deg, #00a8ff 0%, #0077ff 100%);
   box-shadow: 0 -2px 8px rgba(0, 120, 255, 0.3);
 }
 
-.raven-indicator--recording {
+.raven-indicator.recording {
   background: linear-gradient(90deg, #ff3d3d 0%, #c62828 100%);
   box-shadow: 0 -2px 8px rgba(255, 61, 61, 0.5);
   animation: pulse-recording 2s ease-in-out infinite;
 }
 
-.raven-indicator--demo {
+.raven-indicator.passive {
   background: linear-gradient(90deg, #4caf50 0%, #2e7d32 100%);
   box-shadow: 0 -2px 8px rgba(76, 175, 80, 0.5);
 }
@@ -71,12 +80,12 @@
   flex-shrink: 0;
 }
 
-.raven-indicator--recording .raven-indicator__dot {
+.raven-indicator.recording .raven-indicator__dot {
   display: block;
   animation: blink 1.5s ease-in-out infinite;
 }
 
-.raven-indicator--demo .raven-indicator__dot {
+.raven-indicator.demo .raven-indicator__dot {
   display: block;
   background: white;
 }
@@ -119,61 +128,61 @@
 }
 
 /* Passive state - just RAVEN */
-.raven-indicator--passive .raven-indicator__big-letter {
+.raven-indicator.passive .raven-indicator__big-letter {
   display: none;
 }
 
-.raven-indicator--passive .raven-indicator__text-stack {
+.raven-indicator.passive .raven-indicator__text-stack {
   flex-direction: row;
 }
 
-.raven-indicator--passive .raven-indicator__top-text {
+.raven-indicator.passive .raven-indicator__top-text {
   font-size: 9px;
   color: white;
   letter-spacing: 0.8px;
 }
 
-.raven-indicator--passive .raven-indicator__bottom-text {
+.raven-indicator.passive .raven-indicator__bottom-text {
   display: none;
 }
 
 /* recording state colors */
-.raven-indicator--recording .raven-indicator__big-letter {
+.raven-indicator.recording .raven-indicator__big-letter {
   color: #ffebee;
 }
 
-.raven-indicator--recording .raven-indicator__top-text {
+.raven-indicator.recording .raven-indicator__top-text {
   color: rgba(255, 255, 255, 0.85);
 }
 
-.raven-indicator--recording .raven-indicator__bottom-text {
+.raven-indicator.recording .raven-indicator__bottom-text {
   color: rgba(255, 255, 255, 0.95);
 }
 
 /* demo state colors */
-.raven-indicator--demo .raven-indicator__big-letter {
+.raven-indicator.demo .raven-indicator__big-letter {
   color: #e8f5e9;
 }
 
-.raven-indicator--demo .raven-indicator__top-text {
+.raven-indicator.demo .raven-indicator__top-text {
   color: rgba(255, 255, 255, 0.85);
 }
 
-.raven-indicator--demo .raven-indicator__bottom-text {
+.raven-indicator.demo .raven-indicator__bottom-text {
   color: rgba(255, 255, 255, 0.95);
 }
 
 
 /* Panel */
 .raven-panel {
+
   opacity: 0;
   pointer-events: none;
   height: 0;
   background: linear-gradient(135deg, rgba(20, 20, 40, 0.98) 0%, rgba(10, 10, 30, 0.98) 100%);
   backdrop-filter: blur(10px);
   border-radius: 16px 16px 0 0;
-  padding: 0px 12px;
-  padding-bottom: 8px;
+  padding: 0px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -184,6 +193,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-bottom: none;
   max-height: 80vh;
+  width: 360px;
   overflow: hidden;
 }
 
@@ -210,32 +220,92 @@
   height: 0;
 }
 
-/* Mode Header */
+/* ── Mode Header ─────────────────────────────────────────── */
 .raven-mode-header {
   width: 100%;
-  text-align: center;
-  padding: 6px 12px;
-  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 8px 7px 10px;
+  border-radius: 5px;
   margin-bottom: 8px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* box-sizing: border-box; */
+  position: relative;
+  overflow: hidden;
+  transition: background .3s ease, border-color .3s ease;
+  background: linear-gradient(90deg, #00a8ff33, #0077ff1f);
+  /* border: 1px solid rgba(0, 140, 255, .35); */
+  color: #00a8ff;
+}
+
+/* ── Title ── */
+.raven-mode-header__title {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  cursor: default;
+  font-family: Orbitron, Rajdhani, -apple-system, sans-serif;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
-  transition: all 0.3s ease;
+  color: inherit;
 }
 
-.raven-mode-header--manual {
-  background: rgba(0, 168, 255, 0.15);
-  border: 1px solid rgba(0, 168, 255, 0.3);
-  color: #00d4ff;
+.raven-mode-header__title:hover {
+  white-space: normal;
 }
 
-.raven-mode-header--auto {
-  background: rgba(156, 39, 176, 0.15);
-  border: 1px solid rgba(156, 39, 176, 0.3);
-  color: #ce93d8;
+/* ── Close button ── */
+.raven-mode-header__close {
+  flex-shrink: 0;
+  margin-left: 8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
+
+.raven-mode-header__close:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+}
+
+.raven-mode-header__close-x {
+  position: relative;
+  width: 8px;
+  height: 8px;
+}
+
+.raven-mode-header__close-x::before,
+.raven-mode-header__close-x::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #ef4444;
+  border-radius: 1px;
+}
+
+.raven-mode-header__close-x::before {
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.raven-mode-header__close-x::after {
+  transform: translateY(-50%) rotate(-45deg);
+}
+
 
 /* Logo Display */
 .raven-logo {
@@ -316,24 +386,6 @@
   color: #00a8ff;
 }
 
-/* Toggle Button */
-.raven-toggle-button {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  user-select: none;
-  margin-top: 4px;
-}
-
-.raven-toggle-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
-}
-
 /* Download Button */
 .raven-download-button {
   width: 28px;
@@ -356,31 +408,60 @@
   fill: white;
 }
 
+/* RAVEN ACTIONS */
+.menu-container {
+  display: flex;
+  gap: 60px;
+}
+
+.choice-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.raven-btn-separator {
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  flex-shrink: 0;
+}
+
 /* Record Button */
-.raven-record-button {
+.raven-action-btn {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
-  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.4);
   position: relative;
 }
 
-.raven-record-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(229, 57, 53, 0.6);
+.raven-action-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
-.raven-record-button--recording {
-  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+.raven-action-button:hover {
+  transform: scale(1.1);
+}
+
+.raven-action-button.record {
+  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.4);
 }
 
 /* Record Icon */
@@ -392,43 +473,142 @@
   transition: all 0.3s ease;
 }
 
-.raven-record-icon--recording {
+.raven-record-icon.recording {
   border-radius: 3px;
+}
+
+/* Replay button */
+.raven-action-button.replay {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+}
+
+/* RAVEN FILE IMPORT */
+.raven-file-zone {
+  width: 100%;
+  height: 64px;
+  margin-top: 12px;
+  border: 1px dashed #1e3a4a;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  position: relative;
+  transition: border-color .15s, background .15s;
+}
+
+.raven-file-zone:hover {
+  border-color: rgba(0, 212, 255, 0.45);
+  background: rgba(0, 212, 255, 0.03);
+}
+
+.raven-file-zone.drag-over {
+  border-color: #00d4ff;
+  background: rgba(0, 212, 255, 0.06);
+  border-style: solid;
+}
+
+.raven-file-zone input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.raven-file-icon {
+  color: #00d4ff;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.raven-file-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8aa0b0;
+  letter-spacing: 0.5px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.raven-file-label b {
+  color: #00d4ff;
+  font-weight: 700;
 }
 
 /* Examples Container */
 .raven-examples-container {
-  width: 280px;
-  max-height: 0;
+  width: 300px;
+  max-height: 300px;
   overflow-y: auto;
   overflow-x: hidden;
   transition: max-height 0.3s ease;
   margin-top: 0;
 }
 
-.raven-examples-container--visible {
-  max-height: 300px;
-  margin-top: 8px;
+
+/* NO SESSION FOUND */
+.raven-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 28px 16px;
+}
+
+.raven-empty-line {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #3a5060;
+  text-transform: uppercase;
+}
+
+.raven-empty-record {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ef4444;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  transition: color 0.15s, text-shadow 0.15s;
+}
+
+.raven-empty-record:hover {
+  color: #ff6b6b;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
 }
 
 /* Download All Section */
-.raven-example-options-section {
+.raven-options-container {
   position: sticky;
   top: 0;
   background: linear-gradient(135deg, rgba(20, 20, 40, 0.98) 0%, rgba(10, 10, 30, 0.98) 100%);
-  padding: 8px;
-  margin-bottom: 8px;
+  padding: 4px;
   z-index: 10;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 8px;
+  width: 100%;
 }
 
 .raven-button {
   padding: 4px 8px;
   border: none;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -450,32 +630,30 @@
   letter-spacing: 0.3px;
 }
 
-.raven-download-all-content {
-  border-radius: 6px;
-  background: #00a8ff;
+.raven-button.info {
+  background: linear-gradient(135deg, #00a3f3, #238dc3);
+  box-shadow: 0 2px 8px rgba(76, 172, 175, 0.3);
+}
+
+.raven-button.import {
+  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
   box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
 
-.raven-import {
-  border-radius: 6px;
-  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
-  ;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+.raven-button.return {
+  background: linear-gradient(135deg, #838884 0%, #757775 100%);
+  box-shadow: 0 2px 8px rgba(223, 230, 223, 0.3);
+}
+
+.raven-button.error {
+  background: linear-gradient(135deg, #ff2b2b 0%, #7d2e2e 100%);
+  box-shadow: 0 2px 8px rgba(175, 76, 76, 0.3);
 }
 
 /* Recorded URLs Container */
 .raven-recorded-urls {
   width: 280px;
-  max-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
   transition: max-height 0.3s ease, opacity 0.3s ease;
-  margin-top: 0;
-  opacity: 0;
-}
-
-.raven-recorded-urls--visible {
-  max-height: 200px;
   margin-top: 8px;
   opacity: 1;
 }
@@ -499,6 +677,9 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* URL Item */
@@ -1262,7 +1443,6 @@
   border-radius: 4px;
   cursor: pointer;
   display: flex;
-  align-items: center;
   justify-content: center;
   font-size: 16px;
   line-height: 1;
@@ -1504,4 +1684,37 @@
   background: rgba(239, 68, 68, 0.18);
   border-color: rgba(239, 68, 68, 0.45);
   color: #fecaca;
+}
+
+/* ── override item to allow wrapping ── */
+.raven-demo-nav__route {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.raven-demo-nav__dropdown-item {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ── URL: always visible, always truncated ── */
+.raven-demo-nav__dropdown-url {
+  width: 100%;
+  max-width: 280px;
+  margin-top: 2px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.3);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── on hover: wrap, never stretch ── */
+.raven-demo-nav__dropdown-item:hover .raven-demo-nav__dropdown-url {
+  white-space: normal;
+  word-break: break-all;
+  color: rgba(255, 255, 255, 0.5);
 }
