@@ -8,7 +8,6 @@ import "./raven-actions.js";
 import "./widgets/modal.js";
 import "./widgets/raven-logs.js";
 import { getAutoModeIndex, getSession, isActivated, isAuto, isEnabled, isOnSession, isPassive, isRecording, isReplaying, ravenLog, setRavenSession } from "./settings.js";
-// import { demoEvent, fetchSessionsListener, ravents.logEvent, replaySessionListener } from "./utils/ravents.js";
 import { createSession, emptyStateContainer, examplesContainer } from "./widgets/panel/replay.js";
 
 // SESSIONS FUNCITONS
@@ -134,16 +133,18 @@ function loadFile(files, index, dir, resolve) {
 
 function insertImportedSession(json) {
   ravenLog("json : ", json)
-  if (json.navigations && json.navigations != {}) {
-    return dao.insertNonExistantCategory(json.category ?? null).then(cateoryId => {
-      return dao.insertSession(json, cateoryId).then(session => {
-        ravenLog("Inserted Session : ", session, " Successfully!")
-        return session
+  return new Promise((res, rej) => {
+    if (json.navigations && json.navigations != {}) {
+      dao.insertNonExistantCategory(json.category ?? null).then(cateoryId => {
+        dao.insertSession(json, cateoryId).then(session => {
+          ravenLog("Inserted Session : ", session, " Successfully!")
+          res(session);
+        })
       })
-    })
-  } else {
-    return Promise.reject("Wrong RAVEN file format imported! Error : No navigations detected for the session : ", json)
-  }
+    } else {
+      rej("Wrong RAVEN file format imported! Error : No navigations detected for the session : ", json)
+    }
+  })
 }
 
 ravents.replaySessionListener(() => {

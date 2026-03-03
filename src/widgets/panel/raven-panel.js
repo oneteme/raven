@@ -7,8 +7,6 @@ import { examplesContainer } from "./replay";
 import { modeMenu } from "./menu";
 import { rStates } from "../../utils/constants";
 
-let panelHoverTimeOut;
-
 export const indicator = createIndicator(),
     modeHeader = createModeHeader('Make your choice'),
     panel = createPanel();
@@ -66,8 +64,6 @@ function createPanel() {
 
     // Keep panel open when hovering over it
     panel.addEventListener('mouseenter', () => {
-        panelHoverTimeOut = clearTimeout(panelHoverTimeOut)
-        panelHideTimer = 600
         indicator.style.display = 'none';
         panel.classList.add('raven-panel--visible');
         panel.classList.remove('raven-panel--hidden');
@@ -123,7 +119,7 @@ export function showMenu(fileZoneEvent) {
 
 export function showRecord() {
     panel.appendChild(demo.demoNav);
-    utils.detectNavigation(() => { demo.addPage(location.hash, document.title) }, 300);
+    utils.detectNavigation(() => { demo.addPage(location.hash, document.title) }, 100);
     setTimeout(() => {
         ravents.demoEvent();
         demo.addPage(location.hash, document.title)

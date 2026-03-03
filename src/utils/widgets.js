@@ -143,7 +143,7 @@ export function createFileInput(accept = null, fn = null) {
                         fn(e)
                         console.log("🟢 IMPORTED file ", file.name, " Successfully")
                     } catch (err) {
-                        console.error(`🔴 Invalid JSON in file: ${file.name} => Error : `, err);
+                        Promise.reject(`🔴 Invalid file: ${file.name} => Error : `+ err);
                     }
                 };
                 reader.readAsText(file);
