@@ -9,6 +9,6 @@ const recordBtn = ui.createIconBtn('raven-action-button record', ui.createRecord
 export const modeMenu = createMenuContainer();
 
 function createMenuContainer() {
-    menu = ui.createDiv("menu-container", recordContainer, separator, demoContainer);
+    const menu = ui.createDiv("menu-container", recordContainer, separator, demoContainer);
     return menu;
 }
