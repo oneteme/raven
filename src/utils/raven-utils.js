@@ -22,6 +22,7 @@ export function generateJsonName(name) {
 }
 
 export function fetchJson(path) {
+    ravenLog("fetchJson Path", path)
     return fetch(path).then(response => response.json()).then(json => {
         return json;
     }).catch(err => {

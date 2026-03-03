@@ -158,7 +158,7 @@ export function insertNonExistantCategory(name) {
             })
         })
     } else {
-        return NaN
+        return Promise.resolve(NaN)
     }
 }
 
