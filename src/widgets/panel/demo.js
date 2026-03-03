@@ -1,15 +1,15 @@
+import * as utils from "../../utils/raven-utils";
+import * as ravents from "../../utils/ravents";
+import * as ui from "../../utils/widgets";
 import { isOnSession, ravenLog } from "../../settings";
-import { detectNavigation } from "../../utils/raven-utils";
-import { demoListener } from "../../utils/ravents";
-import { createDiv } from "../../utils/widgets";
 
 let pages = new Set();
 export const demoNav = createDemoNav();
 
 function createDemoNav() {
-    const dropdown = createDiv('raven-demo-nav__dropdown'),
-        nav = createDiv('raven-demo-nav', dropdown);
-    demoListener((e) => {
+    const dropdown = ui.createDiv('raven-demo-nav__dropdown'),
+        nav = ui.createDiv('raven-demo-nav', dropdown);
+    ravents.demoListener((e) => {
         openDemoNav(e.detail.sessionData)
     });
 
@@ -17,7 +17,7 @@ function createDemoNav() {
 }
 
 function openDemoNav(sessionData = {}) {
-    detectNavigation(() => { checkAndSelectPage(); })
+    utils.detectNavigation(() => { checkAndSelectPage(); })
     updateDemoNavPage(sessionData.pages ?? []);
     // Show widget
     demoNav.classList.add('raven-demo-nav--visible');
@@ -36,19 +36,19 @@ export function addPage(route, title = null) {
         pages.add(route);
         const pageIndex = pages.size;
         //Page number
-        const number = createDiv('raven-demo-nav__dropdown-number');
+        const number = ui.createDiv('raven-demo-nav__dropdown-number');
         number.textContent = pageIndex;
 
         //Page title
-        const pageTitle = createDiv('raven-demo-nav__dropdown-title');
+        const pageTitle = ui.createDiv('raven-demo-nav__dropdown-title');
         pageTitle.textContent = title || `Page ${pageIndex}`;
 
         // URL shown on hover
-        const url = createDiv('raven-demo-nav__dropdown-url');
+        const url = ui.createDiv('raven-demo-nav__dropdown-url');
         url.textContent = route;
         url.title = route;
-        const routeData = createDiv("raven-demo-nav__route", pageTitle, url),
-            item = createDiv('raven-demo-nav__dropdown-item', number, routeData);
+        const routeData = ui.createDiv("raven-demo-nav__route", pageTitle, url),
+            item = ui.createDiv('raven-demo-nav__dropdown-item', number, routeData);
         item.onclick = (e) => {
             window.location.href = route;
         };

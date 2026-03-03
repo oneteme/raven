@@ -1,6 +1,6 @@
+import * as ravents from "../utils/ravents";
+import * as ui from "../utils/widgets";
 import { rLogs } from "../utils/constants";
-import { logListener } from "../utils/ravents";
-import { createDiv, createTextBtn, createTextDiv } from "../utils/widgets";
 
 const toastsContainer = createToastsContainer(),
     rMessages = {
@@ -18,12 +18,12 @@ const toastsContainer = createToastsContainer(),
     };
 let logs = new Map();
 
-logListener((e) => {
+ravents.logListener((e) => {
     showToastNotification(e.detail.code, e.detail.duration)
 });
 
 function createToastsContainer() {
-    const container = createDiv('raven-toasts-container');
+    const container = ui.createDiv('raven-toasts-container');
     document.body.appendChild(container);
     return container;
 }
@@ -45,27 +45,27 @@ function showToastNotification(code, duration) {
 
     const
         // Header with title, badge, and close button
-        badge = createTextDiv('raven-toast__badge', '1'),
-        title = createTextDiv('raven-toast__title', `RAVEN ${type.toUpperCase()}`, badge),
-        closeBtn = createTextBtn('raven-toast__close', 'x', null, (e) => {
+        badge = ui.createTextDiv('raven-toast__badge', '1'),
+        title = ui.createTextDiv('raven-toast__title', `RAVEN`, badge),
+        closeBtn = ui.createTextBtn('raven-toast__close', 'x', null, (e) => {
             e.stopPropagation();
             removeToast(toastData);
         }),
-        header = createDiv('raven-toast__header', title, closeBtn);
+        header = ui.createDiv('raven-toast__header', title, closeBtn);
     badge.style.display = 'none'; // Hidden by default
 
     // Message
-    const messageEl = createDiv('raven-toast__message');
+    const messageEl = ui.createDiv('raven-toast__message');
     messageEl.innerHTML = message;
 
     // Progress bar
-    const progress = createDiv('raven-toast__progress'),
-        progressBar = createDiv('raven-toast__progress-bar');
+    const progress = ui.createDiv('raven-toast__progress'),
+        progressBar = ui.createDiv('raven-toast__progress-bar');
     progressBar.style.width = '100%';
 
     progress.appendChild(progressBar);
 
-    const toast = createDiv(`raven-toast ${type}`, header, messageEl, progress);
+    const toast = ui.createDiv(`raven-toast ${type}`, header, messageEl, progress);
     toastsContainer.appendChild(toast);
 
     const toastData = {

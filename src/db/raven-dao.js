@@ -1,4 +1,4 @@
-import { createDB, openDB, QUERIES } from "./idx-db-utils";
+import * as db from "./idx-db-utils";
 import { ravenLog } from "../settings";
 
 const DB_NAME = 'raven-db';
@@ -21,25 +21,25 @@ const SCHEMAS = {
     }
 };
 
-createDB(SCHEMAS, DB_NAME, VERSION);
+db.createDB(SCHEMAS, DB_NAME, VERSION);
 const sessionName = SCHEMAS.SESSION.name,
     requestName = SCHEMAS.REQUESTS.name,
     routeName = SCHEMAS.ROUTES.name,
     categoryName = SCHEMAS.CATEGORIES.name;
 
 function openRavenDB() {
-    return openDB(DB_NAME, VERSION)
+    return db.openDB(DB_NAME, VERSION)
 }
 
 // -----------------------------
 // SESSION FUNCTIONS
 // -----------------------------
 export function getAllSessions() {
-    return QUERIES.list(openRavenDB, sessionName);
+    return db.QUERIES.list(openRavenDB, sessionName);
 }
 
 export function getSessionById(id) {
-    return QUERIES.getById(openRavenDB, sessionName, id)
+    return db.QUERIES.getById(openRavenDB, sessionName, id)
 }
 
 export function insertSession(metaData, categoryId = null) {
@@ -122,16 +122,14 @@ export function exportSession(session) {
 }
 
 export function exportSessionById(sessionId) {
-    return new Promise((res, rej) => {
-        getSessionById(sessionId).then(session => {
-            exportSession(session).then(exportedJson => {
-                res(exportedJson);
-            }).catch(err => {
-                rej("exportSessionById -> ERROR : " + err)
-            })
+    return getSessionById(sessionId).then(session => {
+        return exportSession(session).then(exportedJson => {
+            return exportedJson;
         }).catch(err => {
-            rej("exportSessionById -> ERROR : " + err)
+            return Promise.reject("exportSessionById -> ERROR : " + err)
         })
+    }).catch(err => {
+        return Promise.reject("exportSessionById -> ERROR : " + err)
     })
 }
 // -----------------------------
@@ -151,41 +149,37 @@ export function insertCategory(name) {
 }
 
 export function insertNonExistantCategory(name) {
-    return new Promise(res => {
-        if (name) {
-            getCategoryByName(name).then(cat => {
-                res(cat.id)
-            }).catch(() => {
-                insertCategory(name).then(categoryId => {
-                    res(categoryId)
-                })
+    if (name) {
+        return getCategoryByName(name).then(cat => {
+            return cat.id
+        }).catch(() => {
+            return insertCategory(name).then(categoryId => {
+                return categoryId
             })
-        } else {
-            res(NaN)
-        }
-    })
+        })
+    } else {
+        return NaN
+    }
 }
 
 export function getAllCategories() {
-    return QUERIES.list(openRavenDB, categoryName)
+    return db.QUERIES.list(openRavenDB, categoryName)
 }
 
 export function getCategoryById(categoryId) {
-    return QUERIES.getById(openRavenDB, categoryName, categoryId);
+    return db.QUERIES.getById(openRavenDB, categoryName, categoryId);
 }
 
 export function getCategoryByName(name) {
     ravenLog("category ", name)
-    return QUERIES.getByIndex(openRavenDB, categoryName, 'by_name', name);
+    return db.QUERIES.getByIndex(openRavenDB, categoryName, 'by_name', name);
 }
 
 export function getCategoryNameFromSession(session) {
-    return new Promise(res => {
-        getCategoryById(session.category).then(category => {
-            res(category.name)
-        }).catch(err => {
-            res(null)
-        })
+    return getCategoryById(session.category).then(category => {
+        return category.name;
+    }).catch(err => {
+        return null
     })
 }
 
@@ -194,22 +188,22 @@ export function getCategoryNameFromSession(session) {
 // -----------------------------
 export function getRouteBySessionId(sessionId) {
     ravenLog("getRouteBySession -> session : ", sessionId)
-    return QUERIES.getByIndex(openRavenDB, routeName, 'by_session', sessionId);
+    return db.QUERIES.getByIndex(openRavenDB, routeName, 'by_session', sessionId);
 }
 
 export function getAllRoutesBySessionId(sessionId) {
     ravenLog("getAllRoutesBySessionId -> session : ", sessionId)
-    return QUERIES.getAllByIndex(openRavenDB, routeName, 'by_session', sessionId);
+    return db.QUERIES.getAllByIndex(openRavenDB, routeName, 'by_session', sessionId);
 }
 
 export function getRouteBySessionUrl(sessionId, url) {
     ravenLog("getRouteBySessionUrl -> session : ", sessionId, " url : ", url)
-    return QUERIES.getByIndex(openRavenDB, routeName, 'by_session_url', sessionId, url);
+    return db.QUERIES.getByIndex(openRavenDB, routeName, 'by_session_url', sessionId, url);
 }
 // -----------------------------
 // REQUESTS FUNCTIONS
 // -----------------------------
 export function getRequestbyRouteRequest(routeId, requestUrl) {
     ravenLog("getRequestbyRouteRequest -> session : ", routeId, " request : ", requestUrl)
-    return QUERIES.getByIndex(openRavenDB, requestName, 'by_route_request', routeId, requestUrl)
+    return db.QUERIES.getByIndex(openRavenDB, requestName, 'by_route_request', routeId, requestUrl)
 }

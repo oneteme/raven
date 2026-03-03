@@ -1,13 +1,14 @@
-import "./settings.js";
+import * as utils from "./utils/raven-utils.js";
+import * as panelUI from "./widgets/panel/raven-panel.js";
+import * as ravents from "./utils/ravents.js";
 import * as dao from "./db/raven-dao.js";
+import "./settings.js";
 import "./raven-interceptor.js";
 import "./raven-actions.js";
 import "./widgets/modal.js";
 import "./widgets/raven-logs.js";
-import { getAutoModeIndex, getSession, isActivated, isAuto, isEnabled, isOnSession, isPassive, isRecording, isReplaying, ravenLog } from "./settings.js";
-import * as utils from "./utils/raven-utils.js";
-import * as panelUI from "./widgets/panel/raven-panel.js";
-import { demoEvent, fetchSessionsListener, logEvent, replaySessionListener } from "./utils/ravents.js";
+import { getAutoModeIndex, getSession, isActivated, isAuto, isEnabled, isOnSession, isPassive, isRecording, isReplaying, ravenLog, setRavenSession } from "./settings.js";
+// import { demoEvent, fetchSessionsListener, ravents.logEvent, replaySessionListener } from "./utils/ravents.js";
 import { createSession, emptyStateContainer, examplesContainer } from "./widgets/panel/replay.js";
 
 // SESSIONS FUNCITONS
@@ -30,7 +31,7 @@ function exportSessions(sessions, index = 0, indexJson = { "dir": "", "files": [
   })
 }
 
-fetchSessionsListener(() => assembleSessions());
+ravents.fetchSessionsListener(() => assembleSessions());
 
 function assembleSessions() {
   ravenLog("SESSION ASSEMBLE");
@@ -38,14 +39,18 @@ function assembleSessions() {
     ravenLog("getAllSession")
     dao.getAllSessions().then(sessions => {
       ravenLog("sessions : ", sessions)
-      sessions.map(o => createSession(o, dao.getCategoryById));
+      sessions.map(session => createSession(session, dao.getCategoryById,
+        (e) => {
+          e.stopPropagation();
+          exportAndDownloadSession(session);
+        },
+        (e) => navigateToSession(session)));
       // examplesContainer.appendChild(sessions);
     }).catch(err => {
       ravenLog("No sessions found")
       examplesContainer.appendChild(emptyStateContainer)
     })
   })
-
 }
 
 function loadSessions() {
@@ -72,20 +77,41 @@ function exportAndDownloadAllSessions() {
   dao.getAllSessions().then(sessions => {
     exportSessions(sessions);
   }).catch(err => {
-    logEvent(50)
+    ravents.logEvent(50)
   })
 }
 
-function exportAndDownloadSession(sessionId) {
-  return new Promise((res, rej) => {
-    dao.exportSessionById(sessionId).then(exportedJson => {
-      const jsonName = utils.generateJsonName(exportedJson.title);
-      utils.downloadJson(exportedJson, jsonName);
-      res(exportedJson);
-    }).catch(err => {
-      rej("exportAndDownloadSessionById -> ERROR : " + err)
-    })
+function exportAndDownloadSessionById(sessionId) {
+  return dao.exportSessionById(sessionId).then(exportedJson => {
+    const jsonName = utils.generateJsonName(exportedJson.title);
+    utils.downloadJson(exportedJson, jsonName);
+    return exportedJson;
+  }).catch(err => {
+    return Promise.reject("exportAndDownloadSessionById -> ERROR : " + err)
   })
+
+}
+
+function exportAndDownloadSession(session) {
+  return dao.exportSession(session).then(exportedJson => {
+    const jsonName = utils.generateJsonName(exportedJson.title);
+    utils.downloadJson(exportedJson, jsonName)
+  })
+}
+
+function navigateToSession(session) {
+  dao.getRouteBySessionId(session.id)
+    .then(sessionRoute => {
+      if (sessionRoute) {
+        setRavenSession(session.id)
+        setTimeout(() => {
+          window.location.href = sessionRoute.route;
+          utils.reloadPage();
+        }, 200);
+      } else {
+        ravenLog("route not found")
+      }
+    })
 }
 
 function loadFile(files, index, dir, resolve) {
@@ -120,39 +146,38 @@ function insertImportedSession(json) {
   }
 }
 
-replaySessionListener(() => {
+ravents.replaySessionListener(() => {
   loadDemoData().then(sessionData => {
     ravenLog("SessionData", sessionData);
-    demoEvent(sessionData);
+    ravents.demoEvent(sessionData);
   })
     .catch(err => console.error(err));
 })
 function loadDemoData() {
-  return new Promise((res, rej) => {
-    ravenLog("[loadDemoData]", "session ID ", getSession())
-    dao.getSessionById(getSession()).then(session => {
-      panelUI.setHeaderText(session.title);
-      dao.getAllRoutesBySessionId(getSession()).then(routes => {
-        res({ title: session.title, pages: routes })
-      }).catch(err => rej("DEMO MODE : FAIL => " + err));
-    }).catch(err => rej("DEMO MODE : FAIL => " + err))
-  })
+  ravenLog("[loadDemoData]", "session ID ", getSession())
+  return dao.getSessionById(getSession()).then(session => {
+    panelUI.setHeaderText(session.title);
+    return dao.getAllRoutesBySessionId(getSession()).then(routes => {
+      return { title: session.title, pages: routes }
+    }).catch(err => Promise.reject("DEMO MODE : FAIL => " + err));
+  }).catch(err => Promise.reject("DEMO MODE : FAIL => " + err))
 }
+
 // ASSEMBLE RAVEN
 function assembleDOM() {
   if (isPassive()) {
     panelUI.showMenu((json) => {
       insertImportedSession(json).then(session => {
-        logEvent(101)
+        ravents.logEvent(101)
       }).catch(err => {
-        logEvent(40)
+        ravents.logEvent(40)
       })
     })
   } else if (isRecording()) {
     panelUI.showRecord();
   } else if (isReplaying()) {
     if (isOnSession()) {
-      panelUI.startReplay(() => { exportAndDownloadSession(getSession()) })
+      panelUI.startReplay(() => { exportAndDownloadSessionById(getSession()) })
     } else {
       panelUI.showSessions(() => exportAndDownloadAllSessions());
     }
@@ -164,6 +189,6 @@ if (isEnabled() && isActivated()) {
   assembleDOM();
 } else {
   if (isEnabled()) {
-    logEvent(1, 20000);
+    ravents.logEvent(1, 20000);
   }
 }

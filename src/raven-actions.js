@@ -1,8 +1,8 @@
+import * as ravents from "./utils/ravents.js";
+import * as utils from "./utils/raven-utils.js";
 import { rStates } from "./utils/constants.js";
 import { openModal } from "./widgets/modal.js";
 import { isActivated, isManual, isRecording, isReplaying, ravenLog, removeSession, setRavenState } from "./settings.js";
-import { recordEvent, recordListener, replayEvent, replayListener, snapshotEvent } from "./utils/ravents.js";
-import { reloadPage } from "./utils/raven-utils.js";
 
 (function () {
     if (isManual()) {
@@ -11,52 +11,52 @@ import { reloadPage } from "./utils/raven-utils.js";
                 // Ctrl + Shift + R => Record
                 if (e.ctrlKey && e.shiftKey && e.key === 'R') {
                     e.preventDefault();
-                    recordEvent();
+                    ravents.recordEvent();
                 }
                 // Ctrl + Shift + D => Demo
                 if (e.ctrlKey && e.shiftKey && e.key === 'D') {
                     e.preventDefault();
-                    replayEvent();
+                    ravents.replayEvent();
                 }
                 if (e.ctrlKey && e.shiftKey && e.key === 'A') {
                     e.preventDefault();
                     setRavenState(rStates.INACTIVE)
-                    reloadPage();
+                    utils.reloadPage();
                 }
             } else {
                 if (e.ctrlKey && e.shiftKey && e.key === 'A') {
                     e.preventDefault();
                     setRavenState(rStates.PASSIVE)
-                    reloadPage();
+                    utils.reloadPage();
                 }
             }
         });
-        recordListener(() => {
+        ravents.recordListener(() => {
             if (isRecording()) {
                 snapshot();
             } else {
                 record();
             }
         });
-        replayListener(() => {
+        ravents.replayListener(() => {
             if (isReplaying()) {
                 removeSession();
                 setRavenState(rStates.PASSIVE)
             } else {
                 setRavenState(rStates.REPLAY)
             }
-            reloadPage();
+            utils.reloadPage();
         });
         const record = () => {
             removeSession()
             setRavenState(rStates.RECORD)
-            reloadPage()
+            utils.reloadPage()
         }
         const snapshot = () => {
             openModal((payload) => {
                 setRavenState(rStates.PASSIVE)
                 ravenLog("submit : ", payload)
-                snapshotEvent(payload)
+                ravents.snapshotEvent(payload)
             });
         }
 
