@@ -1,3 +1,5 @@
+import { logEvent } from "./ravents";
+
 // WIDGETS
 export function createIconBtn(className, icon, fn = null) {
     const button = createDiv(className, icon)
@@ -143,7 +145,8 @@ export function createFileInput(accept = null, fn = null) {
                         fn(e)
                         console.log("🟢 IMPORTED file ", file.name, " Successfully")
                     } catch (err) {
-                        Promise.reject(`🔴 Invalid file: ${file.name} => Error : `+ err);
+                        logEvent(41);
+                        console.error(`🔴 Invalid file: ${file.name} => Error : `+ err);
                     }
                 };
                 reader.readAsText(file);
