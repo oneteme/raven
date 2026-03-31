@@ -35,6 +35,7 @@ export function detectNavigation(fn, detectionFrequency = 100) {
     ravenLog("detectNavigation");
     setInterval(() => {
         if (location.href !== last) {
+            ravenLog("NAVIGATION DETECTED from ", last, " to : ", location.href);
             last = location.href;
             fn()
         }

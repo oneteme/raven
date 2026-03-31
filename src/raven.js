@@ -1,3 +1,4 @@
+import "./style.css"
 import * as utils from "./utils/raven-utils.js";
 import * as panelUI from "./widgets/panel/raven-panel.js";
 import * as ravents from "./utils/ravents.js";

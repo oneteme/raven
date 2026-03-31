@@ -59,7 +59,7 @@ export function addPage(route, title = null) {
 }
 
 function checkAndSelectPage() {
-    const checkedRoute = isOnSession() ? window.location.href : window.location.hash;
+    const checkedRoute = isOnSession() || window.location.hash == "" ? window.location.href : window.location.hash;
     ravenLog("checkedRoute", checkedRoute);
     const selectedPage = document.querySelector('.raven-demo-nav__dropdown-item--active');
     if (selectedPage) {
