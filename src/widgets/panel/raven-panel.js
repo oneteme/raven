@@ -119,11 +119,11 @@ export function showMenu(fileZoneEvent) {
 
 export function showRecord() {
     panel.appendChild(demo.demoNav);
-    utils.detectNavigation(() => { demo.addPage(location.hash != "" ? location.hash : location.href, document.title) }, 100);
     setTimeout(() => {
         console.warn("current hash : ", location.hash)
         ravents.demoEvent();
         demo.addPage(location.hash != "" ? location.hash : location.href, document.title)
+        utils.detectNavigation(() => { demo.addPage(location.hash != "" ? location.hash : location.href, document.title); demo.checkAndSelectPage(); }, 100);
     }, 1500);
 
     setHeaderText("Recording session...");

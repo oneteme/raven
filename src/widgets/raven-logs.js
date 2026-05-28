@@ -14,7 +14,8 @@ const toastsContainer = createToastsContainer(),
         41: createLogMessage("Error fetching file", rLogs.ERROR),
         50: createLogMessage("<i>Download All</i> : FAIL => <b>No sessions found</b>", rLogs.ERROR),
         100: createLogMessage("<i>All Sessions export</i> : SUCCESS", rLogs.SUCCESS),
-        101: createLogMessage("<i>Session import</i> : SUCCESS", rLogs.SUCCESS)
+        101: createLogMessage("<i>Session import</i> : SUCCESS", rLogs.SUCCESS),
+        102: createLogMessage("Request recorded successfully", rLogs.SUCCESS)
     };
 let logs = new Map();
 

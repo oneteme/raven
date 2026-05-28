@@ -26,9 +26,11 @@ function openDemoNav(sessionData = {}) {
 function updateDemoNavPage(pages) {
     const dropdown = demoNav.querySelector('.raven-demo-nav__dropdown');
     dropdown.innerHTML = '';
+    console.log("adding pages to demo => ", pages)
     pages.forEach((page, index) => {
         addPage(page.route, page.title)
     });
+    checkAndSelectPage();
 }
 
 export function addPage(route, title = null) {
@@ -54,11 +56,10 @@ export function addPage(route, title = null) {
         };
         const dropdown = demoNav.querySelector('.raven-demo-nav__dropdown');
         dropdown.appendChild(item);
-        checkAndSelectPage();
     }
 }
 
-function checkAndSelectPage() {
+export function checkAndSelectPage() {
     const checkedRoute = isOnSession() || window.location.hash == "" ? window.location.href : window.location.hash;
     ravenLog("checkedRoute", checkedRoute);
     const selectedPage = document.querySelector('.raven-demo-nav__dropdown-item--active');
@@ -72,7 +73,7 @@ function checkAndSelectPage() {
         console.warn("No matching link found for:", checkedRoute);
         return;
     }
-
+    console.log("link : ", checkedRoute, " found successfully and it is selected")
     const newPage = link.closest('.raven-demo-nav__dropdown-item');
 
     if (newPage) {

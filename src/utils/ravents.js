@@ -4,7 +4,6 @@ const eventTarget = new EventTarget(),
     DEMO = "raven:demo", REPLAY = "raven:replay", RECORD = "raven:record", SNAPSHOT = "raven:snapshot", LOG = "raven:log",
     TOGGLE = "raven:toggle", SESSIONS = "raven:sessions:fetch", REPLAY_SESSION = "raven:session:replay";
 function raventDispatch(event, payload = null) {
-    ravenLog("[RAVEN EVENTS DISPATCHER]", event);
     eventTarget.dispatchEvent(new CustomEvent(event, { detail: payload }));
 }
 function raventListener(event, fn) {

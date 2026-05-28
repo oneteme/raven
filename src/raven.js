@@ -105,8 +105,9 @@ function navigateToSession(session) {
       if (sessionRoute) {
         setRavenSession(session.id)
         setTimeout(() => {
+          console.log("going to route : ",sessionRoute.route)
           window.location.href = sessionRoute.route;
-          utils.reloadPage();
+          // utils.reloadPage();
         }, 200);
       } else {
         ravenLog("route not found")

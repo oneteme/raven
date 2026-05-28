@@ -100,12 +100,14 @@ import { getSession, isOnSession, isRecording, ravenLog, ravenWarn } from "./set
                             fireXHR(xhr)
                             return;
                         }).catch(err => {
+                            ravenLog("[RAVEN INTERCEPTOR]", "REQUEST NOT FOUND: ", xhr.__url)
                             ravenWarn(err)
                             ravents.logEvent(30)
                             fakeEmptyResponse(xhr)
                             return;
                         })
                 }).catch(err => {
+                    ravenLog("[RAVEN INTERCEPTOR]", "ROUTE NOT FOUND : ", xhr.__pageUrl)
                     ravenWarn(err)
                     ravents.logEvent(20)
                     fakeEmptyResponse(xhr)
@@ -148,6 +150,7 @@ import { getSession, isOnSession, isRecording, ravenLog, ravenWarn } from "./set
                 navigations[xhr.__pageUrl][key]["response"] = JSON.parse(xhr.responseText);
                 navigations[xhr.__pageUrl][key]["status"] = xhr.status;
                 navigations[xhr.__pageUrl][key]["readyState"] = xhr.readyState;
+                ravents.logEvent(102)
             } catch { }
         });
         return xhr;
