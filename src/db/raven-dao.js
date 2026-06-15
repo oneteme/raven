@@ -1,5 +1,5 @@
 import * as db from "./idx-db-utils";
-import { ravenLog } from "../settings";
+import { ravenLog, ravenParams } from "../settings";
 
 const DB_NAME = 'raven-db';
 const VERSION = 1;
@@ -8,6 +8,7 @@ const SCHEMAS = {
     REQUESTS: {
         name: 'request', indexes: [
             { index: 'by_route_request', columns: ["routeId", "url"] },
+            { index: 'by_session_request', columns: ["sessionId", "url"] },
             { index: 'by_route', columns: "routeId" }]
     },
     SESSION: { name: 'session', indexes: [{ index: 'by_title', columns: "title" }] },
@@ -68,7 +69,15 @@ function insertSessionRoutes(routesStore, requestsStore, routes, sessionId) {
         ravenLog("title", routeTitle, "requests:", requests)
         routesStore.add({ route, "title": routeTitle, "sessionId": sessionId }).onsuccess = evn => {
             for (const request of Object.keys(requests)) {
-                requestsStore.add({ routeId: evn.target.result, url: request, xhr: requests[request] });
+                const isGlobal = ravenParams.globalAPI.includes(decodeURIComponent(request));
+                if (isGlobal) {
+                    console.log(request, "this API is global")
+                }
+                const requestData = { routeId: evn.target.result, url: request, xhr: requests[request], global: isGlobal }
+                if (isGlobal) {
+                    requestData["sessionId"] = sessionId
+                }
+                requestsStore.add(requestData);
             }
         }
     }
@@ -206,4 +215,8 @@ export function getRouteBySessionUrl(sessionId, url) {
 export function getRequestbyRouteRequest(routeId, requestUrl) {
     ravenLog("getRequestbyRouteRequest -> session : ", routeId, " request : ", requestUrl)
     return db.QUERIES.getByIndex(openRavenDB, requestName, 'by_route_request', routeId, requestUrl)
+}
+
+export function getRequestBySession(sessionId, requestUrl) {
+    return db.QUERIES.getByIndex(openRavenDB, requestName, 'by_session_request', sessionId, requestUrl)
 }

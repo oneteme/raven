@@ -1,7 +1,7 @@
 import * as dao from "./db/raven-dao";
 import * as utils from "./utils/raven-utils";
 import * as ravents from "./utils/ravents";
-import { getSession, isOnSession, isRecording, ravenLog, ravenWarn } from "./settings";
+import { getSession, isApiGlobal, isOnSession, isRecording, ravenLog, ravenWarn } from "./settings";
 (function () {
     let navigations = {};
 
@@ -83,30 +83,30 @@ import { getSession, isOnSession, isRecording, ravenLog, ravenWarn } from "./set
                 return originalSend.apply(xhr, arguments);
             }
             // xhr.abort();
-            dao.getRouteBySessionUrl(getSession(), xhr.__pageUrl)
-                .then(route => {
-                    dao.getRequestbyRouteRequest(route.id, encodeURIComponent(xhr.__url))
-                        .then(request => {
-                            ravenLog("[RAVEN INTERCEPTOR]", "FOUND REQUEST : ", request)
-                            const fakeXHR = request.xhr,
-                                fakeResponse = JSON.stringify(fakeXHR.response)
-                            // ravenLog("FOUND RESPONSE : ", fakeXHR)
-                            Object.defineProperties(xhr, {
-                                readyState: { get: () => fakeXHR.readyState },
-                                status: { get: () => fakeXHR.status },
-                                responseText: { get: () => fakeResponse },
-                                response: { get: () => fakeResponse }
-                            });
-                            fireXHR(xhr)
-                            return;
-                        }).catch(err => {
-                            ravenLog("[RAVEN INTERCEPTOR]", "REQUEST NOT FOUND: ", xhr.__url)
-                            ravenWarn(err)
-                            ravents.logEvent(30)
-                            fakeEmptyResponse(xhr)
-                            return;
-                        })
+            getData(xhr)
+                .then(request => {
+                    console.log("post get data then ", request)
+                    ravenLog("[RAVEN INTERCEPTOR]", "FOUND REQUEST : ", request)
+                    const fakeXHR = request.xhr,
+                        fakeResponse = JSON.stringify(fakeXHR.response)
+                    // ravenLog("FOUND RESPONSE : ", fakeXHR)
+                    Object.defineProperties(xhr, {
+                        readyState: { get: () => fakeXHR.readyState },
+                        status: { get: () => fakeXHR.status },
+                        responseText: { get: () => fakeResponse },
+                        response: { get: () => fakeResponse }
+                    });
+                    fireXHR(xhr)
+                    return;
+                    // .catch(err => {
+                    //     ravenLog("[RAVEN INTERCEPTOR]", "REQUEST NOT FOUND: ", xhr.__url, " Encoded : ", encodeURIComponent(xhr.__url))
+                    //     ravenWarn(err)
+                    //     ravents.logEvent(30)
+                    //     fakeEmptyResponse(xhr)
+                    //     return;
+                    // })
                 }).catch(err => {
+                    console.error("post get data catch ", err)
                     ravenLog("[RAVEN INTERCEPTOR]", "ROUTE NOT FOUND : ", xhr.__pageUrl)
                     ravenWarn(err)
                     ravents.logEvent(20)
@@ -116,6 +116,25 @@ import { getSession, isOnSession, isRecording, ravenLog, ravenWarn } from "./set
         };
         return xhr;
     }
+
+    function getData(xhr) {
+        return new Promise((res, rej) => {
+            if (isApiGlobal(xhr.__url)) {
+                return dao.getRequestBySession(getSession(), encodeURIComponent(xhr.__url)).then(request => { return request })
+                    .catch(err => {
+                        rej()
+                    })
+            } else {
+                return dao.getRouteBySessionUrl(getSession(), xhr.__pageUrl)
+                    .then(route => {
+                        return dao.getRequestbyRouteRequest(route.id, encodeURIComponent(xhr.__url)).then(request => { return request })
+                    }).catch(err => {
+                        rej()
+                    })
+            }
+        })
+    }
+
     function fireXHR(xhr) {
         setTimeout(() => {
             xhr.dispatchEvent(new Event('readystatechange'));
@@ -123,6 +142,7 @@ import { getSession, isOnSession, isRecording, ravenLog, ravenWarn } from "./set
             xhr.dispatchEvent(new Event('loadend'));
         }, 0);
     }
+
     function fakeEmptyResponse(xhr, status = 404) {
         const emptyResponse = JSON.stringify({});
 
@@ -151,6 +171,7 @@ import { getSession, isOnSession, isRecording, ravenLog, ravenWarn } from "./set
                 navigations[xhr.__pageUrl][key]["status"] = xhr.status;
                 navigations[xhr.__pageUrl][key]["readyState"] = xhr.readyState;
                 ravents.logEvent(102)
+                console.log("added request : ", xhr.__url)
             } catch { }
         });
         return xhr;

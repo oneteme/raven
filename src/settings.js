@@ -8,6 +8,7 @@ export const ravenParams = {
     isReplayMode: false,
     isRecordMode: false,
     loadedFiles: null,
+    globalAPI: [],
     debugMode: false
 }
 setDebugMode(window.rDebug);
@@ -16,6 +17,7 @@ export function RAVEN() {
     setRavenState(getLocalValue(rLocalStrg.STATE));
     setRavenSession(getLocalValue(rLocalStrg.SESSION));
     setRavenMode(window.rMode ?? getLocalValue(rLocalStrg.MODE));
+    setCommonAPI(window.rGlobalApi)
     ravenParams.isRecordMode = isRecording();
     ravenParams.isReplayMode = isReplaying();
     ravenParams.loadedFiles = window.rLoad;
@@ -82,6 +84,20 @@ export function isOnSession() {
 
 export function isReplaying() {
     return ravenParams.state == rStates.REPLAY
+}
+
+export function isApiGlobal(api) {
+    return ravenParams.globalAPI.includes(api)
+}
+
+export function getCommonAPI() {
+    return ravenParams.globalAPI;
+}
+
+export function setCommonAPI(globalAPI = []) {
+    const newGlobalAPI = globalAPI ?? [];
+    ravenParams.globalAPI = newGlobalAPI
+    setLocalValue(rLocalStrg.API, newGlobalAPI)
 }
 
 export function getMode() {

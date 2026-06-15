@@ -1,3 +1,4 @@
+const jarvisLocalRef = "jarvis.raven."
 export const rModes = {
     AUTO: "auto",
     MANUAL: "manual",
@@ -12,9 +13,10 @@ export const rStates = {
 }
 
 export const rLocalStrg = {
-    MODE: "jarvis.raven.mode",
-    SESSION: "jarvis.raven.session",
-    STATE: "jarvis.raven.state"
+    MODE: jarvisLocalRef + "mode",
+    SESSION: jarvisLocalRef + "session",
+    STATE: jarvisLocalRef + "state",
+    API: jarvisLocalRef + "commonAPI"
 }
 
 export const rLogs = {
